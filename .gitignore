@@ -28,9 +28,11 @@ coverage.xml
 .env
 .env.*
 !.env.example
+config.txt
 
 # IDE and operating system files
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
+
