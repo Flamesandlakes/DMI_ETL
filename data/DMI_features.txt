@@ -1,0 +1,20 @@
+Q: scope [all, multiple or just one variable to an aspect]
+Q: frequency [hourly, once every 10 min, or multiple]?
+
+Potential features (name, unit, description, frequency):
+
+- temp_mean_past1h, Celsius, "Latest hour's mean air temperature measured 2 m over terrain", 60 min
+- temp_max_past1h, ...
+- temp_min_past1h, ...
+
+- humidity, percent, "Present relative humidity measured 2 m over terrain", 10 min
+- humidity_past1h, percent, "Latest hour's mean for relative humidity measured 2 m over terrain", 60 min
+
+- pressure, hPa, "Atmospheric pressure at station level", 10 min
+- pressure_at_sea, hPa, "Atmospheric pressure reduced to mean sea level", 10 min
+
+- wind_speed, meters_per_sec, "Latest 10 minutes' mean wind speed measured 10 m over terrain", 10 min
+- wind_speed_past1h, meters_per_sec, "Latest hour's mean wind speed measured 10 m over terrain", 60 min
+- wind_max, meters_per_sec, "Latest 10 minutes' highest 3 seconds mean wind speed measured 10 m over terrain", 10 min
+- wind_min, meters_per_sec, "Latest 10 minutes' lowest 3 seconds mean wind speed measured 10 m over terrain", 10 min
+
