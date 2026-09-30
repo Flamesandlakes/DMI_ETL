@@ -1,6 +1,11 @@
 Q: scope [all, multiple or just one variable to an aspect]
 Q: frequency [hourly, once every 10 min, or multiple]?
 
+Select (initial) features:
+
+- temp_mean_past1h
+- humidity_past1h
+
 Potential features (name, unit, description, frequency):
 
 - temp_mean_past1h, Celsius, "Latest hour's mean air temperature measured 2 m over terrain", 60 min
