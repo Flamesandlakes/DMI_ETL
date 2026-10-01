@@ -9,7 +9,10 @@ create_readings_table_query = """
                 date date,
                 CONSTRAINT fk_reading
                 FOREIGN KEY (stationID) 
-                REFERENCES stations(stationID)
+                REFERENCES stations(stationID),
+                CONSTRAINT fk_parameter
+                FOREIGN KEY (parameter)
+                REFERENCES parameter(name)
                 )
             """
 
