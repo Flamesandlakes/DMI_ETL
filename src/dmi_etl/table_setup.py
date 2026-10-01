@@ -1,24 +1,26 @@
-# sql syntax to create the table that would hold our data
+# sql syntax to create the table that would hold data
 
-create_readings_table_query = """ 
+create_readings_table_query = """
     CREATE TABLE IF NOT EXISTS readings_data(
-                parameter text,
+                parameter_name text,
                 value decimal(6,2),
-                stationID integer,
+                reading_id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                station_id integer,
                 time time,
                 date date,
-                CONSTRAINT fk_reading
-                FOREIGN KEY (stationID) 
-                REFERENCES stations(stationID),
+                CONSTRAINT fk_stations
+                FOREIGN KEY (station_id) 
+                REFERENCES stations_data(station_id),
                 CONSTRAINT fk_parameter
-                FOREIGN KEY (parameter)
-                REFERENCES parameter(name)
+                FOREIGN KEY (parameter_name)
+                REFERENCES parameter_data(name),
+                CONSTRAINT unique_reading UNIQUE (station_id, parameter_name, date, time)
                 )
             """
 
 create_station_table_query = """ 
-    CREATE TABLE IF NOT EXISTS stations(
-                stationID integer PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS stations_data(
+                station_id integer PRIMARY KEY,
                 name text,
                 address text,
                 longitude decimal(6,3),
@@ -27,7 +29,7 @@ create_station_table_query = """
             """
 
 create_parameter_table_query = """ 
-    CREATE TABLE IF NOT EXISTS parameter(
+    CREATE TABLE IF NOT EXISTS parameter_data(
                 name text PRIMARY KEY,
                 unit text,
                 frequency text
