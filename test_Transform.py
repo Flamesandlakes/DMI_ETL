@@ -1,6 +1,6 @@
 
 import unittest
-import Transform
+import src.dmi_etl.Transform as Transform
 
 """Example data for testing"""
 testdata = {
