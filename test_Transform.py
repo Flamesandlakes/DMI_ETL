@@ -23,6 +23,42 @@ testdata = {
         "stationId": "06126",
         "value": 0.0
       }
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          10.4398,
+          55.3088
+        ],
+        "type": "Point"
+      },
+      "id": "02453972-f3fe-72b5-8d30-3f24a89107d9",
+      "type": "Feature",
+      "properties": {
+        "created": "2023-10-26T09:19:43.376959Z",
+        "observed": "2023-10-26T09:20:00Z",
+        "parameterId": "leav_hum_dur_past10min",
+        "stationId": "06126",
+        "value": 0.0
+      }
+    },
+    {
+      "geometry": {
+        "coordinates": [
+          10.4398,
+          55.3088
+        ],
+        "type": "Point"
+      },
+      "id": "02453972-f3fe-72b5-8d30-3f24a89107d9",
+      "type": "Feature",
+      "properties": {
+        "created": "2023-10-26T09:19:43.376959Z",
+        "observed": "2023-10-26T09:20:00Z",
+        "parameterId": "leav_hum_dur_past10min",
+        "stationId": "06126",
+        "value": 0.0
+      }
     }
   ],
   "timeStamp": "2023-10-26T09:19:51Z",
@@ -45,23 +81,24 @@ testdata = {
 
 """Unit tests of getting functions"""
 class test_getting_functions(unittest.TestCase):
+    PropertiesOfData = Transform.Get_Properties(testdata["features"][0])
     def test_of_get_location(self):
-        self.assertEqual(Transform.Get_Location(testdata), [10.4398, 55.3088])
+        self.assertEqual(Transform.Get_Location(testdata["features"][0]), [10.4398, 55.3088])
 
     def test_of_get_stationId(self):
-        self.assertEqual(Transform.Get_StationId(testdata), "06126")
+        self.assertEqual(Transform.Get_StationId(self.PropertiesOfData), "06126")
         
     def test_of_get_parameter(self):
-        Parameter_Name, Parameter_Value = Transform.Get_Parameter(testdata)
+        Parameter_Name, Parameter_Value = Transform.Get_Parameter(self.PropertiesOfData)
         self.assertTrue(Parameter_Name == "leav_hum_dur_past10min" and Parameter_Value == 0.0)
         
     def test_of_get_date_and_time(self):
-        test_date, test_time = Transform.Get_Date_And_Time(testdata)
-        self.assertTrue(test_date == "2023-10-26" and test_time == "09:19:51")
+        test_date, test_time = Transform.Get_Date_And_Time(self.PropertiesOfData)
+        self.assertTrue(test_date == "2023-10-26" and test_time == "09:20:00")
 
 """Unit test of creating a dictionary"""
 class test_make_dict(unittest.TestCase):
-    testdict = Transform.Make_Dict_From_Data(testdata)
+    testdict = Transform.Make_Dict_From_Data(testdata["features"][0])
     
     def test_dict_len(self):
         self.assertTrue(len(self.testdict) == 7)
@@ -85,14 +122,13 @@ class test_make_dict(unittest.TestCase):
         self.assertEqual(self.testdict["Date"], "2023-10-26")
 
     def test_dict_time(self):
-        self.assertEqual(self.testdict["Time"], "09:19:51")
+        self.assertEqual(self.testdict["Time"], "09:20:00")
 
 
 """Unit test of list of dictionaries"""
 class test_dictionaries_from_list(unittest.TestCase):
-    testdict = Transform.Make_Dict_From_Data(testdata)
-    testlist = [testdata,testdata,testdata]
-    testlistdict = Transform.Make_Dicts_From_List(testlist)
+    testdict = Transform.Make_Dict_From_Data(testdata["features"][0])
+    testlistdict = Transform.Make_Dicts_From_Collection(testdata)
     
     def test_of_list_of_dicts_length(self):
         self.assertEqual(len(self.testlistdict), 3)
