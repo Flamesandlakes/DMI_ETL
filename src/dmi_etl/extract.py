@@ -21,7 +21,7 @@ if __name__ == "__main__":
     DMI_base_url = "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items"
     # afprøvning af testfunktion
     parameters = {"datetime": "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z", 
-                "limit": 10, "offset": 0, "bbox": "7,54,16,58", "parameterId": ["temp_mean_past1h", "humidity_past1h"]}
+                "limit": 10, "offset": 0, "bbox": "7,54,16,58", "parameterId": ["temp_mean_past1h"]}#, "humidity_past1h"]}
 
     #print(get_data(DMI_url))
     #print(get_data_with_params(DMI_base_url, parameters))

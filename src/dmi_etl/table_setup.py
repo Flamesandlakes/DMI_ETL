@@ -5,7 +5,7 @@ create_readings_table_query = """
                 parameter_name text,
                 value decimal(6,2),
                 reading_id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-                station_id integer,
+                station_id text,
                 time time,
                 date date,
                 CONSTRAINT fk_stations
@@ -20,9 +20,7 @@ create_readings_table_query = """
 
 create_station_table_query = """ 
     CREATE TABLE IF NOT EXISTS stations_data(
-                station_id integer PRIMARY KEY,
-                name text,
-                address text,
+                station_id text PRIMARY KEY,
                 longitude decimal(6,3),
                 latitude decimal(6,3)
                 )

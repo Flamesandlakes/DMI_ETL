@@ -74,8 +74,8 @@ def load_stations(dict_list, cursor):
     """
     for reading in dict_list:
         #load stations
-        cursor.execute("INSERT INTO stations_data(station_id, name, address, longitude, latitude) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
-        (reading["station_id"], reading["name"], reading["address"], reading["longitude"], reading["latitude"]),
+        cursor.execute("INSERT INTO stations_data(station_id, longitude, latitude) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
+        (reading["station_id"], reading["longitude"], reading["latitude"]),
         )
 
 def load_parameter(dict_list, cursor):
