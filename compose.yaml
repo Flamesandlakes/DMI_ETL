@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgres:18
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 4321
+      POSTGRES_DB: weatherdb
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U" ,"postgres", "-d", "weatherdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  python_app:
+    build:
+      dockerfile: Dockerfile
+    container_name: dmi_etl_app
+    depends_on: 
+      - postgres 
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=4321
+      - DB_NAME=weatherdb
+    command: ["python", "/app/dmi_etl/main.py"]
