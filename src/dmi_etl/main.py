@@ -11,5 +11,24 @@ extractedData = get_data_with_params(DMI_base_url, parameters)
 
 listOfDicts = Make_Dicts_From_Collection(extractedData)
 
+weather_station = [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
+parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"}]
+
+engine = get_engine()
+# a raw database connection that allows direct interaction with the database
+connection = engine.raw_connection()
+# the cursor allows us to execute queries and retrieve results from the database
+cursor = connection.cursor()
+create_tables(cursor)
+
+#first load data into stations, then into parameter and then readings
+load_stations(weather_station, cursor)
+load_parameter(parameter_info, cursor)
+load_readings(listOfDicts, cursor)
+
+connection.commit()
+
+
+
 if __name__ == "__main__":
     print(listOfDicts)

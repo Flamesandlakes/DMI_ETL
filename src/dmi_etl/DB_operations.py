@@ -12,7 +12,7 @@ from pathlib import Path
 
 def get_engine():
     """
-    read config.txt and return SQLAlchemy object
+    read config.txt and return SQLAlchemy object and connect to db
     """
     # creating a Configparser object
     config = configparser.ConfigParser()
@@ -74,7 +74,7 @@ def load_stations(dict_list, cursor):
     """
     for reading in dict_list:
         #load stations
-        cursor.execute("INSERT INTO stations_data(station_id, longitude, latitude) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
+        cursor.execute("INSERT INTO stations_data(station_id, longitude, latitude) VALUES (%s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
         (reading["station_id"], reading["longitude"], reading["latitude"]),
         )
 
@@ -97,7 +97,7 @@ def load_readings(dict_list, cursor):
     for reading in dict_list:
         # load readings
         cursor.execute("INSERT INTO readings_data(parameter_name, value, station_id, time, date) VALUES(%s, %s, %s, %s, %s)",
-                       (reading["parameter_name"], reading["value"], reading["station_id"], reading["time"], reading["date"]),
+                       (reading["ParameterName"], reading["ParameterValue"], reading["stationId"], reading["Time"], reading["Date"]),
         )
 
 
@@ -105,17 +105,10 @@ if __name__ == "__main__":
 
     # dummy data for testing the station part of load_data
     dummy_stations = [
-        {"station_id": "01230", "name": "Kastrup",
-         "address": "blah blah 1, 123 Kastrup",
-         "longitude": 12.655, "latitude": 55.610},
+        {"station_id": "01230", "longitude": 12.655, "latitude": 55.610},
+        {"station_id": "01234", "longitude": 9.888, "latitude": 57.000},
 
-        {"station_id": "01234", "name": "Aalborg",
-         "address": "blah blah 2, 123 Aalborg",
-         "longitude": 9.888, "latitude": 57.000},
-
-        {"station_id": "00001", "name": "Aarhus",
-         "address": "blah blah 3, 8000 Aarhus",
-         "longitude": 10.133, "latitude": 56.930}
+        {"station_id": "00001", "longitude": 10.133, "latitude": 56.930}
     ]
 
     # dummy data for load_parameter
@@ -141,7 +134,9 @@ if __name__ == "__main__":
 
 
     engine = get_engine()
+    # a raw database connection that allows direct interaction with the database
     connection = engine.raw_connection()
+    # the cursor allows us to execute queries and retrieve results from the database
     cursor = connection.cursor()
     create_tables(cursor)
 
