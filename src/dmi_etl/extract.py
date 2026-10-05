@@ -15,6 +15,16 @@ def get_data_with_params(base_url: str, parameters: dict):
     data = response.json()
     return data
 
+def get_station_data(station_list):
+    data_list = []
+    base_url = "https://opendataapi.dmi.dk/v2/metObs/collections/station/items?"
+    for station in station_list:
+        response = requests.get(url = base_url + "stationId=" + station)
+        data = response.json()
+        data_list.append(data)
+    return data_list
+
+
 if __name__ == "__main__":
     DMI_url = "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items?datetime=2018-02-12T00:00:00Z/2018-03-18T12:31:12Z&limit=100&offset=1000&bbox=7,54,16,58"
 

@@ -35,8 +35,8 @@ def Get_Parameter(properties):
 
 
 """Returns two strings with the date and time the data was taken"""
-def Get_Date_And_Time(data,parameter_name):
-    TimeObservedString = data["properties"]["parameter_name"]
+def Get_Date_And_Time(data, parameter_name):
+    TimeObservedString = data["properties"][parameter_name]
     Date_obj = datetime.datetime.strptime(TimeObservedString, "%Y-%m-%dT%H:%M:%SZ")
     Date = Date_obj.strftime("%Y-%m-%d")
     Time = Date_obj.strftime("%H:%M:%S")

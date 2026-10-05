@@ -9,7 +9,16 @@ parameters = {"datetime": "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z",
 
 extractedData = get_data_with_params(DMI_base_url, parameters)
 
-listOfDicts = Make_Dicts_From_Collection(extractedData)
+
+parameterlist = ["properties.stationId", "properties.parameterId",  "properties.value", "properties.observed", "geometry"]
+listOfDicts = Make_Dicts_From_Collection_And_Parameter_List(extractedData,parameterlist)
+stationList = Get_Unique_Dict_Items_From_List(listOfDicts, "stationId")
+
+stationData = get_station_data(stationList)
+
+stationParameters = ["properties.stationId", "properties.parameterId",  "properties.name", "properties.operationFrom", "geometry"]
+stationDicts = Make_Dicts_From_List_And_Parameter_List(stationData, stationParameters)
+
 
 weather_station = [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
 parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"}]
@@ -32,3 +41,5 @@ connection.commit()
 
 if __name__ == "__main__":
     print(listOfDicts)
+    print(stationList)
+    print(stationDicts)
