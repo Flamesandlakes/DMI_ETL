@@ -5,10 +5,8 @@
 from sqlalchemy import create_engine, URL
 import configparser
 from dmi_etl.table_setup import create_parameter_table_query, create_readings_table_query, create_station_table_query
-
 from pathlib import Path
-
-
+import os
 
 def get_engine():
     """
@@ -20,13 +18,12 @@ def get_engine():
     config.read(Path(__file__).parents[2] / "config.txt")
 
     # reading credentials from file
-    username = config.get('Credentials', 'username')
-    host = config.get('Credentials', 'host')
-    password = config.get('Credentials', 'password')
-    port = config.get('Credentials', 'port')
-    db_name = config.get('Credentials', 'db_name')
-    
-    #make SQLAlchemy object to connect to database
+    username = os.getenv("DB_USER", config.get('Credentials', 'username'))
+    host = os.getenv("DB_HOST", config.get('Credentials', 'host'))
+    password = os.getenv("DB_PASSWORD", config.get('Credentials', 'password'))
+    port = int(os.getenv("DB_PORT", config.get('Credentials', 'port')))
+    db_name = os.getenv("DB_NAME", config.get('Credentials', 'db_name'))
+
     return create_engine(URL.create(
     "postgresql",
     username=username, password=password,
@@ -77,6 +74,7 @@ def load_stations(dict_list, cursor):
         cursor.execute("INSERT INTO stations_data(station_id, longitude, latitude) VALUES (%s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
         (reading["station_id"], reading["longitude"], reading["latitude"]),
         )
+
 
 def load_parameter(dict_list, cursor):
     """

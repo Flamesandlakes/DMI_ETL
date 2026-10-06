@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 ENV PYTHONUNBUFFERED=1
 
@@ -12,7 +12,8 @@ COPY . /app
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 5432
+# remove expose ???
+#EXPOSE 5432 
 
 # for data persistence
 # VOLUME /var/lib/postgresql/data 
