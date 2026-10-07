@@ -1,6 +1,6 @@
 [Credentials]
 username = [the username you selected when setting up the database]
 password = [the password you selected when setting up the database]
-host = localhost
+host = vejrdatabase
 port = 5432 
 db_name = [the name you selected when setting up the database]
