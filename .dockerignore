@@ -1,0 +1,23 @@
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Git and local configuration
+.git/
+.env
+.env.*
+#NOTE: config.txt is in gitignore, but is needed for Docker(?)
+
+# Build output
+build/
+dist/
+*.egg-info/
+
+# Test and coverage reports
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
