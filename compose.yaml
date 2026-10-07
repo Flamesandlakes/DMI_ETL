@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: 4321
       POSTGRES_DB: weatherdb
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "weatherdb"]
       interval: 5s
@@ -15,17 +15,22 @@ services:
       retries: 5
 
   python_app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: dmi_etl_app
+    build: .
+    container_name: python_app
     depends_on:
       vejrdatabase:
         condition: service_healthy
     environment:
+      #DATABASE_URL: postgresql://postgres:4321@vejrdatabase:5432/weatherdb
       DB_HOST:  vejrdatabase
       DB_PORT: "5432"
       DB_USER: postgres
       DB_PASSWORD: "4321"
       DB_NAME: weatherdb
-    command: ["python", "/app/src/dmi_etl/main.py"]
+    ports:
+      - "8000:8000"
+  
+    #command: ["python", "/app/src/dmi_etl/main.py"]
+
+volumes:
+  vejrdatabase_data:
