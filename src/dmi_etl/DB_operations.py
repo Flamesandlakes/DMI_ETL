@@ -10,7 +10,7 @@ import os
 
 def get_engine():
     """
-    read config.txt and return SQLAlchemy object and connect to db
+    read config.txt and return SQLAlchemy object. It makes a URL to connect to the database
     """
     # creating a Configparser object
     config = configparser.ConfigParser()
@@ -40,6 +40,8 @@ def create_tables(cursor):
         cursor.execute(q)
 
 
+#Hvad skal der ske, hvis cursor.execute kaster en fejl?
+#Bliver der så committet? Bliver connection lukket?
 
 def commit_to_postgres():
     """
@@ -62,6 +64,7 @@ def commit_to_postgres():
     cursor.close()
     # closing the connection
     connection.close()
+    engine.dispose()
 
 
 def load_stations(dict_list, cursor):
@@ -117,22 +120,22 @@ if __name__ == "__main__":
 
     # dummy data for load_readings
     dummy_readings = [
-        {"parameter_name": "temp", "value": 12.3, "station_id": "01230",
-         "time": "12:00:00", "date": "2026-10-01"},
+        {"ParameterName": "temp", "ParameterValue": 12.3, "stationId": "01230",
+         "Time": "12:00:00", "Date": "2026-10-01"},
 
-        {"parameter_name": "humidity", "value": 81.5, "station_id": "01230",
-         "time": "12:00:00", "date": "2026-10-01"},
+        # {"parameter_name": "humidity", "value": 81.5, "station_id": "01230",
+        #  "time": "12:00:00", "date": "2026-10-01"},
 
-        {"parameter_name": "temp", "value": 11.8, "station_id": "01234",
-         "time": "12:00:00", "date": "2026-10-01"},
+        # {"parameter_name": "temp", "value": 11.8, "station_id": "01234",
+        #  "time": "12:00:00", "date": "2026-10-01"},
 
-        {"parameter_name": "temp", "value": 13.1, "station_id": "00001",
-         "time": "13:00:00", "date": "2026-10-01"},
+        # {"parameter_name": "temp", "value": 13.1, "station_id": "00001",
+        #  "time": "13:00:00", "date": "2026-10-01"},
     ]
 
 
     engine = get_engine()
-    # a raw database connection that allows direct interaction with the database
+    # a raw database connection that allows direct interaction with the database. connecting to database
     connection = engine.raw_connection()
     # the cursor allows us to execute queries and retrieve results from the database
     cursor = connection.cursor()
