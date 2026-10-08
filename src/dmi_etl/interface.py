@@ -83,11 +83,11 @@ class UserInterface:
         self.limit_entry.grid(row=7, column=1, padx=10, pady=(10,10))
     
         # Submit button
-        submit_button = tk.Button(self.root, text="Submit request", command=lambda: print(self.get_user_input()))
+        submit_button = tk.Button(self.root, text="Submit request", command=lambda: self.get_user_input())
         submit_button.grid(row=8, column=0, columnspan=2, pady=20)
         
         # Exit button
-        exit_button = tk.Button(self.root, text="Exit", command=self.exit)
+        exit_button = tk.Button(self.root, text="Continue", command=self.exit)
         exit_button.grid(row=9, column=0, columnspan=2, pady=10)
 
     ### Functions ###
