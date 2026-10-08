@@ -8,6 +8,8 @@ services:
       POSTGRES_DB: weatherdb
     ports:
       - "5433:5432"
+    volumes:
+      - ./db_init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "weatherdb"]
       interval: 5s
