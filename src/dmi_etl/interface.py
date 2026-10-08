@@ -26,10 +26,40 @@ station_name_to_id = {"Sjælsmark": "06188",
                       "Tessebølle": "06174", 
                       "Gedser": "06149"}
 
+def valid_input(input, expected) -> bool:
+    # validate whether the input corresponds to the expected dataformat
+    # current options for expected argument: 'time' | 'coordinates' | 'integer'
+    if expected == 'time':
+        if ":" not in input:
+            return False
+        segs = input.split(":")
+        if len(segs) != 3: # expects three segments (HH, MM, SS)
+            return False
+        for seg in segs:
+            if seg.isnumeric() == False: # each segment must be numeric
+                return False
+            elif len(seg) != 2: # each segment must be only two characters long
+                return False
+    elif expected == 'coordinates':
+        if "," not in input:
+            return False
+        segs = input.split(",")
+        if len(segs) != 4: # expects four segments (S, E, N, W)
+            return False
+        for seg in segs:
+            if seg.replace(".","").isnumeric() != False: # each segment must be numeric (exluding decimal places)
+                return False
+    
+    elif expected == 'integer':
+        if input.isnumeric() == False:
+            return False
+    
+    return True
+
 class UserInterface:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.geometry("500x600")
+        self.root.geometry("800x500")
         self.create_widgets()
         
     def run(self):
@@ -44,8 +74,8 @@ class UserInterface:
         tk.Label(self.root, text="Choose parameter").grid(row=1, column=0, padx=10, pady=10)
         tk.Label(self.root, text="Specify start date").grid(row=2, column=0, padx=10, pady=(10,3))
         tk.Label(self.root, text="Specify start time\n (FORMAT: HH:MM:SS)").grid(row=3, column=0, padx=10, pady=(3,10))
-        tk.Label(self.root, text="Specify end date").grid(row=4, column=0, padx=10, pady=(10,3))
-        tk.Label(self.root, text="Specify end time\n (FORMAT: HH:MM:SS)").grid(row=5, column=0, padx=10, pady=(3,10))
+        tk.Label(self.root, text="Specify end date").grid(row=2, column=2, padx=10, pady=(10,3))
+        tk.Label(self.root, text="Specify end time\n (FORMAT: HH:MM:SS)").grid(row=3, column=2, padx=10, pady=(3,10))
         tk.Label(self.root, text="Set coordinates for readings area,\n bound by SE to NW points\n (FORMAT: S,E,N,W)").grid(row=6, column=0, padx=10, pady=(10,3))
         tk.Label(self.root, text="Set limit\n (Number of readings to retrieve)").grid(row=7, column=0, padx=10, pady=(10,3))
 
@@ -60,19 +90,19 @@ class UserInterface:
     
         # Start Date calendar input
         self.start_date = DateEntry(self.root, width=12, background='lightblue', foreground='white', borderwidth=2, date_pattern='dd/mm/y')
-        self.start_date.grid(row=2, column=1, padx=10, pady=(10,3))
+        self.start_date.grid(row=2, column=1, padx=10, pady=(12,3))
     
         # Start Time entry
         self.start_time = tk.Entry(self.root)
-        self.start_time.grid(row=3, column=1, padx=10, pady=(3,10))
+        self.start_time.grid(row=3, column=1, padx=10, pady=(3,12))
     
         # End Date calendar input
         self.end_date = DateEntry(self.root, width=12, background='blue', foreground='white', borderwidth=2, date_pattern='dd/mm/y')
-        self.end_date.grid(row=4, column=1, padx=10, pady=(10,3))
+        self.end_date.grid(row=2, column=3, padx=10, pady=(12,3))
     
         # End Time entry
         self.end_time = tk.Entry(self.root)
-        self.end_time.grid(row=5, column=1, padx=10, pady=(3,10))
+        self.end_time.grid(row=3, column=3, padx=10, pady=(3,12))
     
         # Bounding Box entry
         self.bbox_entry = tk.Entry(self.root)
@@ -84,12 +114,15 @@ class UserInterface:
     
         # Submit button
         submit_button = tk.Button(self.root, text="Submit request", command=lambda: self.get_user_input())
-        submit_button.grid(row=8, column=0, columnspan=2, pady=20)
+        submit_button.grid(row=8, column=1, columnspan=1, pady=20)
         
         # Exit button
         exit_button = tk.Button(self.root, text="Continue", command=self.exit)
-        exit_button.grid(row=9, column=0, columnspan=2, pady=10)
+        exit_button.grid(row=8, column=3, columnspan=1, pady=20)
 
+    def display_error(msg):
+        pass
+    
     ### Functions ###
     def update_parameters(self, event):
         selected_api = self.api_source_choice.get()
@@ -109,10 +142,14 @@ class UserInterface:
         if end_time_value == "":
             end_time_value = "00:00:00"
 
-        start_datetime = f"{start_date_value}T{start_time_value}Z"
-        end_datetime = f"{end_date_value}T{end_time_value}Z"
-        #print(f"Selected time period: {start_datetime} to {end_datetime}")
-        return "/".join([start_datetime, end_datetime])
+        if valid_input(start_time_value, 'time') and valid_input(end_date_value, 'time'):
+            start_datetime = f"{start_date_value}T{start_time_value}Z"
+            end_datetime = f"{end_date_value}T{end_time_value}Z"
+            #print(f"Selected time period: {start_datetime} to {end_datetime}")
+            return "/".join([start_datetime, end_datetime])
+        else:
+            self.display_error("One or more inputs are invalid: Time value(s) does not adhere to format.")
+            return ""
 
     # Get all the user input values and return them as a list of request packages
     def get_user_input(self):
@@ -140,7 +177,8 @@ class UserInterface:
 if __name__ == "__main__":
     ui = UserInterface()
     ui.run()
-    print(f"Constructed packages: {getattr(ui, "request_packages", [])}")
+    #print(f"Constructed packages: {getattr(ui, "request_packages", [])}")
+    
     
     
         
