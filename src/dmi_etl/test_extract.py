@@ -1,29 +1,20 @@
 import unittest
 from dmi_etl.extract import *
+from unittest.mock import patch
 
 class Test_get_data(unittest.TestCase):
-    def test_tom_url(self):
-        get_data("")
+    @patch("dmi_etl.extract.requests.get")
+    def test_forsoeg(self, mock_get):
+        mock_data = {
+            "stationId": "06188",
+            "value": 12.5,
+        }
+
+        mock_get.return_value.json.return_value = mock_data
+        resultat = get_data("https://findesikke.dk")
         pass
-    def test_ikke_url(self):
-        get_data("blabla")
-        pass
+        self.assertEqual(resultat, mock_data)
 
-    def test_http(self):
-            get_data("http://opendataapi.dmi.dk/v2/metObs/collections/observation/items")
-            pass
-
-    def test_https_stavefejl1(self):
-             get_data("htp://opendataapi.dmi.dk/v2/metObs/collections/observation/items")
-             pass
-
-    def test_kommando_print(self):
-             #get_data("print("hahahaha")")
-             pass
-    def test_url_findes_ikke(self):
-                get_data("http://opendataapi.dmi.dk/v2/dfgmetObs/collections/observation/items")
-                pass
-    
 
 class Test_get_data_with_params(unittest.TestCase):
     def test_get_data_with_params(self):
