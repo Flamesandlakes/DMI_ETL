@@ -2,6 +2,9 @@ from dmi_etl.DB_operations import *
 from dmi_etl.table_setup import create_parameter_table_query, create_readings_table_query, create_station_table_query
 from unittest.mock import Mock
 from unittest.mock import patch
+from decimal import Decimal
+#from datetime import date, time
+import datetime
 import os
 import unittest
 
@@ -48,7 +51,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         cursor = connection.cursor()
         cursor.execute("SELECT table_name FROM information_schema.tables") #look in postgres' table over tables. Each row is one table
         tables = []
-        for row in cursor.fetchall():  #fetches all the rows of a query result. It returns all the rows as a list of tuples.
+        for row in cursor.fetchall():  #fetches all the rows of a query result. It returns all the rows as a list of tuples
             tables.append(row[0]) #append first element of tuple
         cursor.close()
         connection.close()
@@ -58,21 +61,92 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         assert "stations_data" in tables
         
 
-    # def test_load_stations_into_db(self):
+    def test_load_stations_into_db(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        dummy_stations = [
+            {"station_id": "01230", "longitude": 12.655, "latitude": 55.610},
+            {"station_id": "01234", "longitude": 9.888, "latitude": 57.000},
+            {"station_id": "00001", "longitude": 10.133, "latitude": 56.930}
+        ]
+        try:
+            create_tables(cursor) #make tables
+            load_stations(dummy_stations, cursor)
+            cursor.execute("SELECT * FROM stations_data") #read tables
+            result = cursor.fetchall()
+            assert len(result) == 3
+            expected = [('01230', Decimal('12.655'), Decimal('55.610')), 
+                        ('01234', Decimal('9.888'), Decimal('57.000')), 
+                        ('00001', Decimal('10.133'), Decimal('56.930'))]
 
-    #     engine = get_engine()
-    #     connection = engine.raw_connection()
-    #     cursor = connection.cursor()
-    #     dummy_stations = [
-    #         {"station_id": "01230", "longitude": 12.655, "latitude": 55.610},
-    #         {"station_id": "01234", "longitude": 9.888, "latitude": 57.000},
-    #         {"station_id": "00001", "longitude": 10.133, "latitude": 56.930}
-    #     ]
-    #     create_tables(cursor)
-    #     load_stations(dummy_stations, cursor)
+            self.assertEqual(result, expected)
+        finally:
+            cursor.close()
+            connection.close()
+            engine.dispose()
 
-    #     assert 
 
+    def test_load_parameter_into_db(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        # dummy data for load_parameter
+        dummy_parameters = [
+            {"name": "temp", "unit": "Celsius", "frequency": "1h"},
+            {"name": "humidity", "unit": "percent", "frequency": "1h"},
+        ]
+        try:
+            create_tables(cursor) #make tables
+            load_parameter(dummy_parameters, cursor)
+            cursor.execute("SELECT * FROM parameter_data") #read tables
+            result = cursor.fetchall()
+            assert len(result) == 2
+
+            expected =[('temp', 'Celsius', '1h'), 
+                       ('humidity', 'percent', '1h')]
+            
+            self.assertEqual(result, expected)
+        finally:
+            cursor.close()
+            connection.close()
+            engine.dispose()
+
+
+
+    def test_load_readings_into_db(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        dummy_stations = [
+            {"station_id": "01230", "longitude": 12.655, "latitude": 55.610},
+            {"station_id": "01234", "longitude": 9.888, "latitude": 57.000},
+            {"station_id": "00001", "longitude": 10.133, "latitude": 56.930}
+        ]
+        dummy_parameters = [
+            {"name": "temp", "unit": "Celsius", "frequency": "1h"},
+            {"name": "humidity", "unit": "percent", "frequency": "1h"},
+        ]
+        dummy_readings = [
+            {"ParameterName": "temp", "ParameterValue": 12.3, "stationId": "01230",
+            "Time": "12:00:00", "Date": "2026-10-01"},
+        ]
+
+        try:
+            create_tables(cursor) #make tables
+            load_parameter(dummy_parameters, cursor)
+            load_stations(dummy_stations, cursor)
+
+            load_readings(dummy_readings, cursor)
+            cursor.execute("SELECT * FROM readings_data") #read tables
+            result = cursor.fetchall()
+            assert len(result) == 1
+            expected = [('temp', Decimal('12.30'), 1, '01230', datetime.time(12, 0), datetime.date(2026, 10, 1))]
+            self.assertEqual(result, expected)
+        finally:
+            cursor.close()
+            connection.close()
+            engine.dispose()
 
 
 
