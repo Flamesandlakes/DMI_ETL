@@ -1,4 +1,5 @@
 from logging import root
+import time
 import tkinter as tk
 from tkinter import ttk
 from tkcalendar import Calendar, DateEntry
@@ -58,7 +59,7 @@ class UserInterface:
         self.parameter_choice.grid(row=1, column=1)
     
         # Start Date calendar input
-        self.start_date = DateEntry(self.root, width=12, background='green', foreground='white', borderwidth=2)
+        self.start_date = DateEntry(self.root, width=12, background='lightblue', foreground='white', borderwidth=2, date_pattern='dd/mm/y')
         self.start_date.grid(row=2, column=1, padx=10, pady=(10,3))
     
         # Start Time entry
@@ -66,7 +67,7 @@ class UserInterface:
         self.start_time.grid(row=3, column=1, padx=10, pady=(3,10))
     
         # End Date calendar input
-        self.end_date = DateEntry(self.root, width=12, background='blue', foreground='white', borderwidth=2)
+        self.end_date = DateEntry(self.root, width=12, background='blue', foreground='white', borderwidth=2, date_pattern='dd/mm/y')
         self.end_date.grid(row=4, column=1, padx=10, pady=(10,3))
     
         # End Time entry
@@ -84,7 +85,11 @@ class UserInterface:
         # Submit button
         submit_button = tk.Button(self.root, text="Submit request", command=lambda: print(self.get_user_input()))
         submit_button.grid(row=8, column=0, columnspan=2, pady=20)
-            
+        
+        # Exit button
+        exit_button = tk.Button(self.root, text="Exit", command=self.exit)
+        exit_button.grid(row=9, column=0, columnspan=2, pady=10)
+
     ### Functions ###
     def update_parameters(self, event):
         selected_api = self.api_source_choice.get()
@@ -110,7 +115,7 @@ class UserInterface:
         return "/".join([start_datetime, end_datetime])
 
     # Get all the user input values and return them as a list of request packages
-    def get_user_input(self) -> list:
+    def get_user_input(self):
         selected_api = self.api_source_choice.get()
         chosen_parameters = self.parameter_choice.curselection()
         time_period = self.get_selected_timeperiod()
@@ -124,7 +129,7 @@ class UserInterface:
                                                 "bbox": bbox_entry_value, "limit": limit_entry_value}}
             request_packages.append(request_package)
 
-        return request_packages
+        self.request_packages = request_packages
 
     # Function to extract URL and parameters from a request package
     def get_url_and_params(self,package) -> tuple:
@@ -135,6 +140,8 @@ class UserInterface:
 if __name__ == "__main__":
     ui = UserInterface()
     ui.run()
+    print(f"Constructed packages: {getattr(ui, "request_packages", [])}")
+    
     
         
 
