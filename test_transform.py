@@ -1,6 +1,6 @@
 
 import unittest
-import src.dmi_etl.Transform as Transform
+import src.dmi_etl.transform as Transform
 
 """Example data for testing"""
 testdata = {
@@ -93,7 +93,7 @@ class test_getting_functions(unittest.TestCase):
         self.assertTrue(Parameter_Name == "leav_hum_dur_past10min" and Parameter_Value == 0.0)
         
     def test_of_get_date_and_time(self):
-        test_date, test_time = Transform.Get_Date_And_Time(self.PropertiesOfData)
+        test_date, test_time = Transform.Get_Date_And_Time(testdata["features"][0],"observed")
         self.assertTrue(test_date == "2023-10-26" and test_time == "09:20:00")
 
 """Unit test of creating a dictionary"""
