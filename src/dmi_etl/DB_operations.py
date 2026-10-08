@@ -72,7 +72,7 @@ def load_stations(dict_list, cursor):
     for reading in dict_list:
         #load stations
         cursor.execute("INSERT INTO stations_data(station_id, longitude, latitude) VALUES (%s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
-        (reading["station_id"], reading["longitude"], reading["latitude"]),
+        (reading["stationId"], reading["longitude"], reading["latitude"]),
         )
 
 
@@ -95,7 +95,7 @@ def load_readings(dict_list, cursor):
     for reading in dict_list:
         # load readings
         cursor.execute("INSERT INTO readings_data(parameter_name, value, station_id, time, date) VALUES(%s, %s, %s, %s, %s)",
-                       (reading["ParameterName"], reading["ParameterValue"], reading["stationId"], reading["Time"], reading["Date"]),
+                       (reading["ParameterId"], reading["value"], reading["stationId"], reading["observedTime"], reading["observedDate"]),
         )
 
 
