@@ -3,9 +3,9 @@ from dmi_etl.transform import *
 from dmi_etl.DB_operations import *
 from dmi_etl.interface import UserInterface
 
-
+print("testing print")
 if __name__ == "__main__":
-
+    print("Hello World")
     ui = UserInterface()
     ui.run()
 
@@ -33,6 +33,8 @@ if __name__ == "__main__":
 
         weather_stations = get_station_data(stations_to_request)
 
+        parameterlist_stations = ["properties.stationId",  "properties.name", "geometry"]
+        weather_stations = Make_Dicts_From_List_And_Parameter_List(weather_stations,parameterlist_stations)
         # something something, convert the format of weather_stations to the one below for each entry:
         # [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
 
