@@ -95,11 +95,7 @@ def load_readings(dict_list, cursor):
     for reading in dict_list:
         # load readings
         cursor.execute("INSERT INTO readings_data(parameter_name, value, station_id, time, date) VALUES(%s, %s, %s, %s, %s)",
-<<<<<<< Updated upstream
-                       (reading["ParameterId"], reading["value"], reading["stationId"], reading["observedTime"], reading["observedDate"]),
-=======
                        (reading["parameterId"], reading["value"], reading["stationId"], reading["observedTime"], reading["observedDate"]),
->>>>>>> Stashed changes
         )
 
 
@@ -107,10 +103,10 @@ if __name__ == "__main__":
 
     # dummy data for testing the station part of load_data
     dummy_stations = [
-        {"station_id": "01230", "longitude": 12.655, "latitude": 55.610},
-        {"station_id": "01234", "longitude": 9.888, "latitude": 57.000},
+        {"stationId": "01230", "longitude": 12.655, "latitude": 55.610},
+        {"stationId": "01234", "longitude": 9.888, "latitude": 57.000},
 
-        {"station_id": "00001", "longitude": 10.133, "latitude": 56.930}
+        {"stationId": "00001", "longitude": 10.133, "latitude": 56.930}
     ]
 
     # dummy data for load_parameter
@@ -121,16 +117,16 @@ if __name__ == "__main__":
 
     # dummy data for load_readings
     dummy_readings = [
-        {"parameter_name": "temp", "value": 12.3, "station_id": "01230",
+        {"parameterId": "temp", "value": 12.3, "stationId": "01230",
          "time": "12:00:00", "date": "2026-10-01"},
 
-        {"parameter_name": "humidity", "value": 81.5, "station_id": "01230",
+        {"parameterId": "humidity", "value": 81.5, "stationId": "01230",
          "time": "12:00:00", "date": "2026-10-01"},
 
-        {"parameter_name": "temp", "value": 11.8, "station_id": "01234",
+        {"parameterId": "temp", "value": 11.8, "stationId": "01234",
          "time": "12:00:00", "date": "2026-10-01"},
 
-        {"parameter_name": "temp", "value": 13.1, "station_id": "00001",
+        {"parameterId": "temp", "value": 13.1, "stationId": "00001",
          "time": "13:00:00", "date": "2026-10-01"},
     ]
 
