@@ -187,7 +187,7 @@ class test_make_dict(unittest.TestCase):
 class test_dictionaries_from_parameters(unittest.TestCase):
     testdict = Transform.Make_Dict_From_Data_And_Parameter_List(testdata["features"][0], parameterlist)
     testlistdict = Transform.Make_Dicts_From_Collection_And_Parameter_List(testdata, parameterlist)
-    print(testlistdict[0])
+    
     def test_of_list_of_dicts_length(self):
         self.assertEqual(len(self.testlistdict), 3)
 
@@ -220,7 +220,7 @@ class test_dictionaries_from_list_of_collections(unittest.TestCase):
 
 class test_empty_features(unittest.TestCase):
     testlistdict = Transform.Make_Dicts_From_Collection_And_Parameter_List(testdata3, parameterlist)
-    print(testlistdict)
+    
     def test_dict_lenngth(self):
         self.assertEqual(len(self.testlistdict), 0)
 
