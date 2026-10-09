@@ -1,10 +1,17 @@
 from dmi_etl.extract import *
 from dmi_etl.transform import *
 from dmi_etl.DB_operations import *
-
+from dmi_etl.interface import UserInterface
 
 
 if __name__ == "__main__":
+
+    ui = UserInterface()
+    ui.run()
+
+    for package in ui.request_packages:
+        url, parameters = ui.get_url_and_params(package)
+
     DMI_base_url = "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items"
 
     parameters = {"datetime": "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z", 

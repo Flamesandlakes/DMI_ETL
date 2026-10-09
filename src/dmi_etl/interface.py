@@ -1,8 +1,7 @@
-from logging import root
 import time
 import tkinter as tk
 from tkinter import ttk
-from tkcalendar import Calendar, DateEntry
+from tkcalendar import DateEntry
 
 ### Dictionaries for API options and parameters ###
 API_options = {"DMI readings": "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items",
@@ -25,6 +24,8 @@ station_name_to_id = {"Sjælsmark": "06188",
                       "Holbæk Flyveplads": "06156", 
                       "Tessebølle": "06174", 
                       "Gedser": "06149"}
+
+default_values = {"time": "00:00:00", "coordinates": "7,54,16,58", "limit": '100'}
 
 def valid_input(input, expected) -> bool:
     # validate whether the input corresponds to the expected dataformat
@@ -61,12 +62,19 @@ class UserInterface:
         self.root = tk.Tk()
         self.root.geometry("800x500")
         self.create_widgets()
+        self.halt = 0
         
     def run(self):
             self.root.mainloop()
-            
-    def exit(self):
+
+    def continue_pipeline(self):
+        self.halt = 0
         self.root.destroy()
+
+    def exit(self):
+        self.halt = 1
+        self.root.destroy()
+        
 
     def create_widgets(self):
         # Create labels for the input fields
@@ -76,7 +84,7 @@ class UserInterface:
         tk.Label(self.root, text="Specify start time\n (FORMAT: HH:MM:SS)").grid(row=3, column=0, padx=10, pady=(3,10))
         tk.Label(self.root, text="Specify end date").grid(row=2, column=2, padx=10, pady=(10,3))
         tk.Label(self.root, text="Specify end time\n (FORMAT: HH:MM:SS)").grid(row=3, column=2, padx=10, pady=(3,10))
-        tk.Label(self.root, text="Set coordinates for readings area,\n bound by SE to NW points\n (FORMAT: S,E,N,W)").grid(row=6, column=0, padx=10, pady=(10,3))
+        tk.Label(self.root, text="Set coordinates for readings area,\n bound by WS point to EN point\n (FORMAT: W,S,E,N)").grid(row=6, column=0, padx=10, pady=(10,3))
         tk.Label(self.root, text="Set limit\n (Number of readings to retrieve)").grid(row=7, column=0, padx=10, pady=(10,3))
 
          # "Choose API" dropdown menu
@@ -87,13 +95,17 @@ class UserInterface:
         # "Choose Parameter" listbox
         self.parameter_choice = tk.Listbox(self.root, selectmode="multiple", height=0)
         self.parameter_choice.grid(row=1, column=1)
-    
+
+        #### Calendar inputs ####
+        default_start_time = tk.StringVar(self.root, value = default_values["time"])
+        default_end_time = tk.StringVar(self.root, value = default_values["time"])
+
         # Start Date calendar input
         self.start_date = DateEntry(self.root, width=12, background='lightblue', foreground='white', borderwidth=2, date_pattern='dd/mm/y')
         self.start_date.grid(row=2, column=1, padx=10, pady=(12,3))
     
         # Start Time entry
-        self.start_time = tk.Entry(self.root)
+        self.start_time = tk.Entry(self.root, textvariable= default_start_time)
         self.start_time.grid(row=3, column=1, padx=10, pady=(3,12))
     
         # End Date calendar input
@@ -101,26 +113,30 @@ class UserInterface:
         self.end_date.grid(row=2, column=3, padx=10, pady=(12,3))
     
         # End Time entry
-        self.end_time = tk.Entry(self.root)
+        self.end_time = tk.Entry(self.root, textvariable= default_end_time)
         self.end_time.grid(row=3, column=3, padx=10, pady=(3,12))
     
         # Bounding Box entry
-        self.bbox_entry = tk.Entry(self.root)
+        default_coords = tk.StringVar(self.root, value = default_values["coordinates"])
+
+        self.bbox_entry = tk.Entry(self.root, textvariable = default_coords)
         self.bbox_entry.grid(row=6, column=1, padx=10, pady=(10,10))
     
         # Limit entry
-        self.limit_entry = tk.Entry(self.root)
+        default_limit = tk.StringVar(self.root, value= default_values['limit'])
+
+        self.limit_entry = tk.Entry(self.root, textvariable= default_limit)
         self.limit_entry.grid(row=7, column=1, padx=10, pady=(10,10))
     
-        # Submit button
-        submit_button = tk.Button(self.root, text="Submit request", command=lambda: self.get_user_input())
-        submit_button.grid(row=8, column=1, columnspan=1, pady=20)
-        
-        # Exit button
-        exit_button = tk.Button(self.root, text="Continue", command=self.exit)
-        exit_button.grid(row=8, column=3, columnspan=1, pady=20)
+        # Submit and continue button
+        continue_button = tk.Button(self.root, text="Submit request and continue", command=self.submit_and_continue())
+        continue_button.grid(row=8, column=3, columnspan=1, pady=20)
 
-    def display_error(msg):
+        # Exit button
+        exit_button = tk.Button(self.root, text="Exit", command=self.exit())
+        exit_button.grid(row=8, column=3, columnspan=1, pady=10)
+
+    def display_error(self, msg):
         pass
     
     ### Functions ###
@@ -142,7 +158,7 @@ class UserInterface:
         if end_time_value == "":
             end_time_value = "00:00:00"
 
-        if valid_input(start_time_value, 'time') and valid_input(end_date_value, 'time'):
+        if valid_input(start_time_value, 'time') and valid_input(end_time_value, 'time'):
             start_datetime = f"{start_date_value}T{start_time_value}Z"
             end_datetime = f"{end_date_value}T{end_time_value}Z"
             #print(f"Selected time period: {start_datetime} to {end_datetime}")
@@ -168,6 +184,11 @@ class UserInterface:
 
         self.request_packages = request_packages
 
+    # store the request and exit the interface
+    def submit_and_continue(self):
+        self.get_user_input()
+        self.continue_pipeline()
+
     # Function to extract URL and parameters from a request package
     def get_url_and_params(self,package) -> tuple:
         api_url = package.get("api_url")
@@ -176,8 +197,9 @@ class UserInterface:
 
 if __name__ == "__main__":
     ui = UserInterface()
+    time.sleep(0.5)
     ui.run()
-    #print(f"Constructed packages: {getattr(ui, "request_packages", [])}")
+    print(f"Constructed packages: {getattr(ui, "request_packages", [])}")
     
     
     
