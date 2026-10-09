@@ -16,7 +16,7 @@ def Get_Location(data):
     return geo
 
 
-"""gets the specified parameter from the property of a given data entry"""
+"""Gets the specified parameter from the property of a given data entry"""
 def Get_Parameter_From_Properties(data,parameter_name):
     return data["properties"][parameter_name]
 
@@ -38,7 +38,7 @@ def Get_Unique_Dict_Items_From_List(dictlist, key):
     return list(set(itemlist))
 
 
-"""makes a dictionary based on the given data and list of parameters"""
+"""Makes a dictionary based on the given data and list of parameters"""
 def Make_Dict_From_Data_And_Parameter_List(data, parameter_list):
     Dictionary = {}
     for parameter in parameter_list:
@@ -60,6 +60,7 @@ def Make_Dict_From_Data_And_Parameter_List(data, parameter_list):
     return Dictionary
 
 
+"""Makes a list of dictionaries from a collection and a list of parameters"""
 def Make_Dicts_From_Collection_And_Parameter_List(Collection, parameter_list):
     List_Of_Dicts = []
     for datadict in Collection["features"]:
@@ -67,6 +68,8 @@ def Make_Dicts_From_Collection_And_Parameter_List(Collection, parameter_list):
         List_Of_Dicts.append(New_Dict)
     return List_Of_Dicts
 
+
+"""Makes a list of dictionaries from a list of collections and a list of parameters"""
 def Make_Dicts_From_List_And_Parameter_List(collection_list, parameter_list): 
     List_Of_Dicts = []
     for collection in collection_list:
@@ -75,15 +78,15 @@ def Make_Dicts_From_List_And_Parameter_List(collection_list, parameter_list):
     return List_Of_Dicts
 
 
-
-
-#check for features, properties, geometry
+"""Checks collection for containing features"""
 def CollectionCheck(collection):
     if collection["type"] == "FeatureCollection" and "features" in collection:
         return True
     else:
         return False
 
+
+"""Checks feature for geometry and properties"""
 def FeatureCheck(feature):
     if feature ["type"] == "Feature" and"geometry" in feature and "properties" in feature:
         return True
@@ -91,8 +94,7 @@ def FeatureCheck(feature):
         return False
     
 
-    
-#check for parameters
+"""Checks a feature for containing the expected parameters"""
 def ParameterCheck(feature, parameterlist):
     allValid = True
     for parameter in parameterlist:
