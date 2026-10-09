@@ -6,7 +6,7 @@ from tkcalendar import DateEntry
 ### Dictionaries for API options and parameters ###
 API_options = {"DMI readings": "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items",
                #"DMI stations": "https://opendataapi.dmi.dk/v2/metObs/collections/station/items",
-               "SPAC stations": None
+               "SPAC readings": None
                }
 
 API_parameters = {"DMI readings": ["temp_mean_past1h", "wind_speed_past1h", 
@@ -130,12 +130,12 @@ class UserInterface:
         self.limit_entry.grid(row=7, column=1, padx=10, pady=(10,10))
     
         # Submit and continue button
-        continue_button = tk.Button(self.root, text="Submit request and continue", command=self.submit_and_continue())
-        continue_button.grid(row=8, column=3, columnspan=1, pady=20)
+        continue_button = tk.Button(self.root, text="Submit request\n and continue", command=self.submit_and_continue)
+        continue_button.grid(row=8, column=2, columnspan=1, pady=20, ipadx = 30)
 
         # Exit button
-        exit_button = tk.Button(self.root, text="Exit", command=self.exit())
-        exit_button.grid(row=8, column=3, columnspan=1, pady=10)
+        exit_button = tk.Button(self.root, text="Exit", command=self.exit)
+        exit_button.grid(row=8, column=3, columnspan=1, pady=10, ipadx = 30, ipady=8)
 
     def display_error(self, msg):
         pass
