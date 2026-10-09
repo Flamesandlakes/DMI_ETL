@@ -95,7 +95,11 @@ def load_readings(dict_list, cursor):
     for reading in dict_list:
         # load readings
         cursor.execute("INSERT INTO readings_data(parameter_name, value, station_id, time, date) VALUES(%s, %s, %s, %s, %s)",
+<<<<<<< Updated upstream
                        (reading["ParameterId"], reading["value"], reading["stationId"], reading["observedTime"], reading["observedDate"]),
+=======
+                       (reading["parameterId"], reading["value"], reading["stationId"], reading["observedTime"], reading["observedDate"]),
+>>>>>>> Stashed changes
         )
 
 
