@@ -21,7 +21,7 @@ if __name__ == "__main__":
         extractedData = get_data_with_params(url, parameters)
 
         parameterlist = ["properties.stationId", "properties.parameterId",  "properties.value", "properties.observed", "geometry"]
-        listOfDicts = Make_Dicts_From_Collection_And_Parameter_List(extractedData)
+        listOfDicts = Make_Dicts_From_Collection_And_Parameter_List(extractedData, parameterlist)
         all_listOfDicts.extend(listOfDicts)
 
         # Collect supplementary (but also required) data on stations in extracted data
