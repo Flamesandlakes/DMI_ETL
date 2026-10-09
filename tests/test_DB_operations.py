@@ -66,9 +66,9 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         connection = engine.raw_connection()
         cursor = connection.cursor()
         dummy_stations = [
-            {"station_id": "01230", "longitude": 12.655, "latitude": 55.610},
-            {"station_id": "01234", "longitude": 9.888, "latitude": 57.000},
-            {"station_id": "00001", "longitude": 10.133, "latitude": 56.930}
+            {"stationId": "01230", "longitude": 12.655, "latitude": 55.610},
+            {"stationId": "01234", "longitude": 9.888, "latitude": 57.000},
+            {"stationId": "00001", "longitude": 10.133, "latitude": 56.930}
         ]
         try:
             create_tables(cursor) #make tables
@@ -119,17 +119,17 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         connection = engine.raw_connection()
         cursor = connection.cursor()
         dummy_stations = [
-            {"station_id": "01230", "longitude": 12.655, "latitude": 55.610},
-            {"station_id": "01234", "longitude": 9.888, "latitude": 57.000},
-            {"station_id": "00001", "longitude": 10.133, "latitude": 56.930}
+            {"stationId": "01230", "longitude": 12.655, "latitude": 55.610},
+            {"stationId": "01234", "longitude": 9.888, "latitude": 57.000},
+            {"stationId": "00001", "longitude": 10.133, "latitude": 56.930}
         ]
         dummy_parameters = [
             {"name": "temp", "unit": "Celsius", "frequency": "1h"},
             {"name": "humidity", "unit": "percent", "frequency": "1h"},
         ]
         dummy_readings = [
-            {"ParameterName": "temp", "ParameterValue": 12.3, "stationId": "01230",
-            "Time": "12:00:00", "Date": "2026-10-01"},
+            {"parameterId": "temp", "value": 12.3, "stationId": "01230",
+            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
         ]
 
         try:
@@ -216,9 +216,9 @@ class TestDBOperations(unittest.TestCase):
     def test_load_stations(self):
         cursor = Mock()
         dummy_stations = [
-            {"station_id": "01230", "longitude": 12.655, "latitude": 55.610},
-            {"station_id": "01234", "longitude": 9.888, "latitude": 57.000},
-            {"station_id": "00001", "longitude": 10.133, "latitude": 56.930}
+            {"stationId": "01230", "longitude": 12.655, "latitude": 55.610},
+            {"stationId": "01234", "longitude": 9.888, "latitude": 57.000},
+            {"stationId": "00001", "longitude": 10.133, "latitude": 56.930}
         ]
         load_stations(dummy_stations, cursor)
         assert cursor.execute.call_count ==3
@@ -226,8 +226,8 @@ class TestDBOperations(unittest.TestCase):
     def test_load_readings(self):
         cursor = Mock()
         dummy_readings = [
-            {"ParameterName": "temp", "ParameterValue": 12.3, "stationId": "01230",
-            "Time": "12:00:00", "Date": "2026-10-01"}]
+            {"parameterId": "temp", "value": 12.3, "stationId": "01230",
+            "observedTime": "12:00:00", "observedDate": "2026-10-01"}]
         load_readings(dummy_readings, cursor)
         assert cursor.execute.call_count ==1
 

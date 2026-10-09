@@ -12,9 +12,10 @@ if __name__ == "__main__":
 
     extractedData = get_data_with_params(DMI_base_url, parameters)
 
-    listOfDicts = Make_Dicts_From_Collection(extractedData)
+    parameterlist = ["properties.stationId", "properties.parameterId",  "properties.value", "properties.observed", "geometry"]
+    listOfDicts = Make_Dicts_From_Collection_And_Parameter_List(extractedData,parameterlist)
 
-    weather_station = [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
+    weather_station = [{"stationId":"06019", "latitude":55.8766, "longitude": 12.4294}]
     parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"}]
 
 
