@@ -12,17 +12,24 @@ if __name__ == "__main__":
     for package in ui.request_packages:
         url, parameters = ui.get_url_and_params(package)
 
-    DMI_base_url = "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items"
+    #DMI_base_url = "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items"
 
-    parameters = {"datetime": "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z", 
-                    "limit": 10, "offset": 0, "bbox": "7,54,16,58", "parameterId": ["temp_mean_past1h"]}
+    # parameters = {"datetime": "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z", 
+    #                 "limit": 10, "offset": 0, "bbox": "7,54,16,58", "parameterId": ["temp_mean_past1h"]}
 
-    extractedData = get_data_with_params(DMI_base_url, parameters)
+        extractedData = get_data_with_params(url, parameters)
 
-    listOfDicts = Make_Dicts_From_Collection(extractedData)
+        listOfDicts = Make_Dicts_From_Collection(extractedData)
 
-    weather_station = [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
-    parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"}]
+        uniqueStationIds = Get_Unique_Dict_Items_From_List(listOfDicts, "stationId")
+
+        weather_stations = get_station_data(uniqueStationIds)
+
+    #weather_station = [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
+    parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"},
+                      {"name":"humidity_past1h", "unit":"Percent", "frequency":"Hourly"},
+                      {"name":"precip_past1h", "unit":"Kilograms per Square Meter", "frequency":"Hourly"},
+                      {"name":"wind_speed_past1h", "unit":"Meters per Second", "frequency":"Hourly"}]
 
 
     print(listOfDicts)

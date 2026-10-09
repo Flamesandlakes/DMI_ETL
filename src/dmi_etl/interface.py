@@ -9,7 +9,8 @@ API_options = {"DMI readings": "https://opendataapi.dmi.dk/v2/metObs/collections
                "SPAC stations": None
                }
 
-API_parameters = {"DMI readings": ["temp_mean_past1h", "wind_speed_past1h", "precipitation_past1h"],
+API_parameters = {"DMI readings": ["temp_mean_past1h", "wind_speed_past1h", 
+                                   "precip_past1h", "humidity_past1h"],
                   "DMI stations": ["Sjælsmark", "Jægersborg", 
                                    "Københavns Lufthavn", "Roskilde Lufthavn", "Holbæk Flyveplads", 
                                    "Tessebølle",
