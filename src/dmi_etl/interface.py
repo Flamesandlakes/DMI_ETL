@@ -52,11 +52,19 @@ def validate_input(input, expected) -> bool:
         if "," not in input:
             return False
         segs = input.split(",")
-        if len(segs) != 4: # expects four segments (S, E, N, W)
+        if len(segs) != 4: # expects four segments (S, W, N, E)
             return False
-        for seg in segs:
+        for i, seg in enumerate(segs):
+            if seg.startswith("-"): # allow minus numbers, but only remove the first minus sign for future checks
+                seg = seg[1:]
             if seg.replace(".","").isnumeric() == False: # each segment must be numeric (exluding decimal places)
                 return False
+            if i == 0 or i == 2: # S / N
+                if float(seg) > 90: # highest possible latitude (note: minus prefix should be already be removed)
+                    return False
+            elif i == 1 or i == 3: # E / W
+                if float(seg) > 180:
+                    return False
     
     elif expected == 'integer':
         if input.isnumeric() == False:
@@ -91,7 +99,7 @@ class UserInterface:
         tk.Label(self.root, text="Specify start time\n (FORMAT: HH:MM:SS)").grid(row=3, column=0, padx=10, pady=(3,10))
         tk.Label(self.root, text="Specify end date").grid(row=2, column=2, padx=10, pady=(10,3))
         tk.Label(self.root, text="Specify end time\n (FORMAT: HH:MM:SS)").grid(row=3, column=2, padx=10, pady=(3,10))
-        tk.Label(self.root, text="Set coordinates for readings area,\n bound by WS point to EN point\n (FORMAT: W,S,E,N)").grid(row=6, column=0, padx=10, pady=(10,3))
+        tk.Label(self.root, text="Set coordinates for readings area,\n bound by SE point to NW point\n (FORMAT: W,S,E,N)").grid(row=6, column=0, padx=10, pady=(10,3))
         tk.Label(self.root, text="Set limit\n (Number of readings to retrieve, per parameter)").grid(row=7, column=0, padx=10, pady=(10,3))
 
          # "Choose API" dropdown menu
