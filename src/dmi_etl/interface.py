@@ -2,6 +2,7 @@ import time
 import tkinter as tk
 from tkinter import ttk
 from tkcalendar import DateEntry
+import sys
 
 ### Dictionaries for API options and parameters ###
 API_options = {"DMI readings": "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items",
@@ -28,7 +29,7 @@ station_name_to_id = {"Sjælsmark": "06188",
 
 default_values = {"time": "00:00:00", "coordinates": "7,54,16,58", "limit": '100'}
 
-def valid_input(input, expected) -> bool:
+def validate_input(input, expected) -> bool:
     # validate whether the input corresponds to the expected dataformat
     # current options for expected argument: 'time' | 'coordinates' | 'integer'
     if expected == 'time':
@@ -37,11 +38,16 @@ def valid_input(input, expected) -> bool:
         segs = input.split(":")
         if len(segs) != 3: # expects three segments (HH, MM, SS)
             return False
-        for seg in segs:
+        for i, seg in enumerate(segs):
             if seg.isnumeric() == False: # each segment must be numeric
                 return False
             elif len(seg) != 2: # each segment must be only two characters long
                 return False
+            elif int(seg) > 59: # any value must not exceed 59 (minutes, seconds, but also hours)
+                return False
+            elif (int(seg) > 23 and i == 0): # the first segment, the hour, must not exceed 23
+                return False
+            
     elif expected == 'coordinates':
         if "," not in input:
             return False
@@ -49,7 +55,7 @@ def valid_input(input, expected) -> bool:
         if len(segs) != 4: # expects four segments (S, E, N, W)
             return False
         for seg in segs:
-            if seg.replace(".","").isnumeric() != False: # each segment must be numeric (exluding decimal places)
+            if seg.replace(".","").isnumeric() == False: # each segment must be numeric (exluding decimal places)
                 return False
     
     elif expected == 'integer':
@@ -86,7 +92,7 @@ class UserInterface:
         tk.Label(self.root, text="Specify end date").grid(row=2, column=2, padx=10, pady=(10,3))
         tk.Label(self.root, text="Specify end time\n (FORMAT: HH:MM:SS)").grid(row=3, column=2, padx=10, pady=(3,10))
         tk.Label(self.root, text="Set coordinates for readings area,\n bound by WS point to EN point\n (FORMAT: W,S,E,N)").grid(row=6, column=0, padx=10, pady=(10,3))
-        tk.Label(self.root, text="Set limit\n (Number of readings to retrieve)").grid(row=7, column=0, padx=10, pady=(10,3))
+        tk.Label(self.root, text="Set limit\n (Number of readings to retrieve, per parameter)").grid(row=7, column=0, padx=10, pady=(10,3))
 
          # "Choose API" dropdown menu
         self.api_source_choice= ttk.Combobox(self.root, values=list(API_options.keys()))
@@ -159,7 +165,7 @@ class UserInterface:
         if end_time_value == "":
             end_time_value = "00:00:00"
 
-        if valid_input(start_time_value, 'time') and valid_input(end_time_value, 'time'):
+        if validate_input(start_time_value, 'time') and validate_input(end_time_value, 'time'):
             start_datetime = f"{start_date_value}T{start_time_value}Z"
             end_datetime = f"{end_date_value}T{end_time_value}Z"
             #print(f"Selected time period: {start_datetime} to {end_datetime}")
@@ -174,6 +180,8 @@ class UserInterface:
         chosen_parameters = self.parameter_choice.curselection()
         time_period = self.get_selected_timeperiod()
         bbox_entry_value = self.bbox_entry.get()
+        if validate_input(bbox_entry_value, "coordinates") == False:
+            self.display_error("One or more inputs are invalid: Coordinate sets does not adhere to format.")
         limit_entry_value = self.limit_entry.get()
         request_packages = [] # create a request package for each selected parameter (since multiple parameterIds will otherwise conflict with the API)
         for i in chosen_parameters:
