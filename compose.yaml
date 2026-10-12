@@ -16,21 +16,21 @@ services:
       timeout: 5s
       retries: 5
 
-  python_app:
-    build: .
-    container_name: python_app
-    depends_on:
-      vejrdatabase:
-        condition: service_healthy
-    environment:
-      #DATABASE_URL: postgresql://postgres:4321@vejrdatabase:5432/weatherdb
-      DB_HOST:  vejrdatabase
-      DB_PORT: "5432"
-      DB_USER: postgres
-      DB_PASSWORD: "4321"
-      DB_NAME: weatherdb
-    ports:
-      - "8000:8000"
+  # python_app:
+  #   build: .
+  #   container_name: python_app
+  #   depends_on:
+  #     vejrdatabase:
+  #       condition: service_healthy
+  #   environment:
+  #     #DATABASE_URL: postgresql://postgres:4321@vejrdatabase:5432/weatherdb
+  #     DB_HOST:  vejrdatabase
+  #     DB_PORT: "5432"
+  #     DB_USER: postgres
+  #     DB_PASSWORD: "4321"
+  #     DB_NAME: weatherdb
+  #   ports:
+  #     - "8000:8000"
   
     #command: ["python", "/app/src/dmi_etl/main.py"]
 

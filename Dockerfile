@@ -8,9 +8,9 @@ WORKDIR /app
 # ?
 COPY . /app
 
-# install dependencies
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# # install dependencies
+# COPY requirements.txt requirements.txt
+# RUN pip install --no-cache-dir -r requirements.txt
 
 # remove expose ???
 #EXPOSE 5432 
