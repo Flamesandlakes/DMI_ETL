@@ -15,7 +15,7 @@ class RateConstraint():
     def count_call(self):
         self.calls_so_far += 1
         if self.calls_so_far >= self.ratelimit:
-            if (time.time() - self.reference_time) >= self.time_to_exceed:
+            if (time.time() - self.reference_time) <= self.time_to_exceed:
                 time.sleep(self.time_to_exceed)
                 self.reset_call_count()
                 self.reference_time = time.time()
@@ -48,7 +48,7 @@ def get_station_data(station_list):
         
     return data_list
 
-
+"""
 if __name__ == "__main__":
     DMI_url = "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items?datetime=2018-02-12T00:00:00Z/2018-03-18T12:31:12Z&limit=100&offset=1000&bbox=7,54,16,58"
 
@@ -67,4 +67,4 @@ if __name__ == "__main__":
 
     print(get_data_with_params(DMI_base_url, parameters))
     #print(parameters)
-    #parameters
+    #parameters"""

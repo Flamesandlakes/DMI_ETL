@@ -56,3 +56,22 @@ class Test_get_station_data(unittest.TestCase):
         resultat = get_station_data(["06188"])
 
         self.assertEqual(resultat, [mock_data])
+
+class Test_rate_constraint(unittest.TestCase):
+
+    def test_count_call(self):
+        test_ratefollower = RateConstraint()
+        self.assertEqual(test_ratefollower.calls_so_far,0)
+        test_ratefollower.count_call()
+        self.assertEqual(test_ratefollower.calls_so_far,1)
+
+    def test_sleep(self):
+        test_ratefollower = RateConstraint(time_to_exceed = 1)
+        test_ratefollower.calls_so_far = 500
+
+        reference_time = test_ratefollower.reference_time
+        test_ratefollower.count_call()
+        new_time = time.time()
+        self.assertEqual(test_ratefollower.calls_so_far,0)
+        self.assertTrue(new_time - reference_time >= 1)
+        self.assertNotEqual(reference_time, test_ratefollower.reference_time)
