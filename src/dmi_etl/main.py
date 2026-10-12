@@ -3,9 +3,8 @@ from dmi_etl.transform import *
 from dmi_etl.DB_operations import *
 from dmi_etl.interface import UserInterface
 
-print("testing print")
+
 if __name__ == "__main__":
-    print("Hello World")
     ui = UserInterface()
     ui.run()
 
