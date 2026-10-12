@@ -15,7 +15,7 @@ def get_engine():
     # creating a Configparser object
     config = configparser.ConfigParser()
     # find and read the configuration file
-    config.read(Path(__file__).parents[2] / "config.txt")
+    config.read(Path(__file__).parents[2] / "config.txt", encoding="utf-8-sig")
 
     # reading credentials from file
     username = os.getenv("DB_USER", config.get('Credentials', 'username'))
@@ -74,8 +74,8 @@ def load_stations(dict_list, cursor):
     """
     for reading in dict_list:
         #load stations
-        cursor.execute("INSERT INTO stations_data(station_id, longitude, latitude) VALUES (%s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
-        (reading["stationId"], reading["longitude"], reading["latitude"]),
+        cursor.execute("INSERT INTO stations_data(station_id, longitude, latitude, location_name) VALUES (%s, %s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
+        (reading["stationId"], reading["longitude"], reading["latitude"], reading["name"]),
         )
 
 
@@ -133,18 +133,19 @@ if __name__ == "__main__":
          "time": "13:00:00", "date": "2026-10-01"},
     ]
 
+    #commit_to_postgres(dummy_stations, dummy_parameters, dummy_readings)
 
-    engine = get_engine()
-    # a raw database connection that allows direct interaction with the database. connecting to database
-    connection = engine.raw_connection()
-    # the cursor allows us to execute queries and retrieve results from the database
-    cursor = connection.cursor()
-    create_tables(cursor)
+    # engine = get_engine()
+    # # a raw database connection that allows direct interaction with the database. connecting to database
+    # connection = engine.raw_connection()
+    # # the cursor allows us to execute queries and retrieve results from the database
+    # cursor = connection.cursor()
+    # create_tables(cursor)
 
-    #first load data into stations, then into parameter and then readings
-    load_stations(dummy_stations, cursor)
-    load_parameter(dummy_parameters, cursor)
-    load_readings(dummy_readings, cursor)
+    # #first load data into stations, then into parameter and then readings
+    # load_stations(dummy_stations, cursor)
+    # load_parameter(dummy_parameters, cursor)
+    # load_readings(dummy_readings, cursor)
 
-    connection.commit()
+    # connection.commit()
 

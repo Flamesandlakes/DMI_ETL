@@ -22,7 +22,8 @@ create_station_table_query = """
     CREATE TABLE IF NOT EXISTS stations_data(
                 station_id text PRIMARY KEY,
                 longitude decimal(6,3),
-                latitude decimal(6,3)
+                latitude decimal(6,3),
+                location_name text
                 )
             """
 
