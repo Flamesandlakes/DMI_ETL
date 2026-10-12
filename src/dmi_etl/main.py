@@ -47,17 +47,19 @@ if __name__ == "__main__":
     #weather_station = [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
     #parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"}]
 
-    #print(listOfDicts)
-    engine = get_engine()
-    # a raw database connection that allows direct interaction with the database
-    connection = engine.raw_connection()
-    # the cursor allows us to execute queries and retrieve results from the database
-    cursor = connection.cursor()
-    create_tables(cursor)
+    commit_to_postgres(all_weather_stations,parameter_info,all_listOfDicts)
 
-    #first load data into stations, then into parameter and then readings
-    load_stations(all_weather_stations, cursor)
-    load_parameter(parameter_info, cursor)
-    load_readings(all_listOfDicts, cursor)
+    # #print(listOfDicts)
+    # engine = get_engine()
+    # # a raw database connection that allows direct interaction with the database
+    # connection = engine.raw_connection()
+    # # the cursor allows us to execute queries and retrieve results from the database
+    # cursor = connection.cursor()
+    # create_tables(cursor)
 
-    connection.commit()
+    # #first load data into stations, then into parameter and then readings
+    # load_stations(all_weather_stations, cursor)
+    # load_parameter(parameter_info, cursor)
+    # load_readings(all_listOfDicts, cursor)
+
+    # connection.commit()

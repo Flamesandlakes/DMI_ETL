@@ -43,7 +43,7 @@ def create_tables(cursor):
 #Hvad skal der ske, hvis cursor.execute kaster en fejl?
 #Bliver der så committet? Bliver connection lukket?
 
-def commit_to_postgres():
+def commit_to_postgres(stationList, parameterList, readingList):
     """
     Function to save the data into a PostgreSQL database
     """
@@ -57,6 +57,9 @@ def commit_to_postgres():
 
     create_tables(cursor)
 
+    load_stations(stationList, cursor)
+    load_parameter(parameterList, cursor)
+    load_readings(readingList, cursor)
 
     # committing the current transaction to the database
     connection.commit()
@@ -133,7 +136,7 @@ if __name__ == "__main__":
          "time": "13:00:00", "date": "2026-10-01"},
     ]
 
-    #commit_to_postgres(dummy_stations, dummy_parameters, dummy_readings)
+    commit_to_postgres(dummy_stations, dummy_parameters, dummy_readings)
 
     # engine = get_engine()
     # # a raw database connection that allows direct interaction with the database. connecting to database
