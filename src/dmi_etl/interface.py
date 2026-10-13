@@ -1,8 +1,10 @@
 import time
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import ttk
 from tkcalendar import DateEntry
 import sys
+import datetime
 
 ### Dictionaries for API options and parameters ###
 API_options = {"DMI readings": "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items",
@@ -72,26 +74,64 @@ def validate_input(input, expected) -> bool:
     
     return True
 
-class UserInterface:
+class ErrorLogger():
     def __init__(self):
-        self.root = tk.Tk()
-        self.root.geometry("800x500")
-        self.create_widgets()
+        self.session_errors = []
+        
+    def log_error(self, error_txt: str):
+        self.session_errors.append( (error_txt, datetime.datetime.now()) )
+    
+    def error_check(self):
+        if bool(self.session_errors):
+            self.display_errors()
+            return 1
+        return 0
+    
+    def display_errors(self):
+        error_msg = f"The following ({len(self.session_errors)}) error(s) occured:\n\n"
+        for error, time in self.session_errors:
+            error_msg += f"{error};\nat {time}\n\n"
+        error_msg += "\n Please retry with valid values."
+        messagebox.askretrycancel("ERROR", error_msg)
+
+class UserInterface(ErrorLogger):
+    def __init__(self):
+        #self.is_ready = False
         self.halt = 0
+    
+    def start(self): # create the root and add the widgets
+        self.root = tk.Tk()
+        self.root.title("Define API call")
+        self.root.geometry("850x450")
+        self.create_widgets()
         
     def run(self):
+        if self.has_root() == False:
+            self.start()
+        if self.has_root():
             self.root.mainloop()
 
-    def continue_pipeline(self):
-        self.halt = 0
-        self.root.destroy()
+    def continue_pipeline(self): # might be redundant vs. cleanup
+        self.cleanup() # move to cleanup with changing the exit code
 
-    def exit(self):
+    def halt_pipeline(self) -> None:
         self.halt = 1
-        self.root.destroy()
-        
+        self.cleanup()
+    
+    def cleanup(self) -> None:
+        if self.has_root():
+            self.root.destroy()
+            self.root = None
+            self.is_ready = False
 
+    def has_root(self): 
+            return hasattr(self, "root")
+    
     def create_widgets(self):
+        # if self.has_root == False:
+        #     self.record_error("Error: No root Tk() object to attach widgets to.")
+        #     self.halt = 1
+        #     return 1
         # Create labels for the input fields
         tk.Label(self.root, text="Choose API").grid(row=0, column=0, padx=10, pady=10)
         tk.Label(self.root, text="Choose parameter").grid(row=1, column=0, padx=10, pady=10)
@@ -148,11 +188,11 @@ class UserInterface:
         continue_button.grid(row=8, column=2, columnspan=1, pady=20, ipadx = 30)
 
         # Exit button
-        exit_button = tk.Button(self.root, text="Exit", command=self.exit)
+        exit_button = tk.Button(self.root, text="Exit", command=self.halt_pipeline)
         exit_button.grid(row=8, column=3, columnspan=1, pady=10, ipadx = 30, ipady=8)
+        
+        #return 0
 
-    def display_error(self, msg):
-        pass
     
     ### Functions ###
     def update_parameters(self, event):
@@ -179,7 +219,7 @@ class UserInterface:
             #print(f"Selected time period: {start_datetime} to {end_datetime}")
             return "/".join([start_datetime, end_datetime])
         else:
-            self.display_error("One or more inputs are invalid: Time value(s) does not adhere to format.")
+            self.log_error("ERROR: Time value(s) does not adhere to format.")
             return ""
 
     # Get all the user input values and return them as a list of request packages
@@ -189,8 +229,10 @@ class UserInterface:
         time_period = self.get_selected_timeperiod()
         bbox_entry_value = self.bbox_entry.get()
         if validate_input(bbox_entry_value, "coordinates") == False:
-            self.display_error("One or more inputs are invalid: Coordinate sets does not adhere to format.")
+            self.log_error("ERROR: Coordinate sets does not adhere to format.")
         limit_entry_value = self.limit_entry.get()
+        if validate_input(limit_entry_value, "integer") == False:
+            self.log_error("ERROR: Limit not set as an integer.")
         request_packages = [] # create a request package for each selected parameter (since multiple parameterIds will otherwise conflict with the API)
         for i in chosen_parameters:
             selected_parameter = self.parameter_choice.get(i)
@@ -200,6 +242,8 @@ class UserInterface:
             request_packages.append(request_package)
 
         self.request_packages = request_packages
+        self.halt = self.error_check()
+        
 
     # store the request and exit the interface
     def submit_and_continue(self):
@@ -214,9 +258,14 @@ class UserInterface:
 
 if __name__ == "__main__":
     ui = UserInterface()
-    time.sleep(0.5)
     ui.run()
-    print(f"Constructed packages: {getattr(ui, "request_packages", [])}")
+    #er = ErrorLogger()#UserInterface()
+    #er.set_root(ui.root)
+    time.sleep(0.5)
+    #er.session_errors = [("Error Message 1", str(datetime.datetime.now())), ("ERROR: Time value(s) does not adhere to format.", str(datetime.datetime.now())), ("Error Message 3", str(datetime.datetime.now()))]
+    #er.display_errors()
+    #ui.run()
+    #print(f"Constructed packages: {getattr(ui, "request_packages", [])}")
     
     
     
