@@ -5,6 +5,7 @@ import tkinter
 import datetime
 import os
 import unittest
+from subprocess import Popen, PIPE
 
 class Test_valid_input(unittest.TestCase):
     
@@ -112,11 +113,13 @@ class Test_ErrorLogger(unittest.TestCase):
         self.assertAlmostEqual(logger.session_errors[n-1][1], _time, delta=datetime.timedelta(seconds=1)) # allowing for 1 sec lag between logging and post loop time
 
     def test_log_and_check(self):
-        logger = ErrorLogger()
-        self.assertEqual(logger.error_check(), 0)   # no errors yet
-        logger.log_error("simulated error")
-        self.assertEqual(logger.error_check(), 1)
-        #logger.after(100, lambda: self.root.event_generate('<Return>'))
+        with patch("tkinter.messagebox.askretrycancel", return_value=True):
+            logger = ErrorLogger()
+            self.assertEqual(logger.error_check(), 0)   # no errors yet
+            logger.log_error("simulated error")
+            self.assertEqual(logger.error_check(), 1)
+        
+        
         
     def test_display_errors_formats_message(self):
         logger = ErrorLogger()
@@ -157,7 +160,7 @@ class TestUserInterface(unittest.TestCase):
         pkg = self.ui.request_packages[0]
         self.assertEqual(pkg["api"], "DMI readings")
         self.assertEqual(pkg["api_url"],
-                         "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items")
+                        "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items")
         self.assertEqual(pkg["api_parameters"]["parameterId"], "temp_mean_past1h")
         self.assertEqual(pkg["api_parameters"]["limit"], "100")
 
@@ -167,8 +170,9 @@ class TestUserInterface(unittest.TestCase):
 
     def test_no_parameters_selected_yields_empty_packages(self):
         self.ui.parameter_choice.curselection.return_value = []
-        self.ui.get_user_input()
-        self.assertEqual(self.ui.request_packages, [])
+        with patch("dmi_etl.interface.messagebox.askretrycancel", return_value = True):
+            self.ui.get_user_input()
+            self.assertEqual(self.ui.request_packages, [])
 
 
 ### Partially generated tests for widget methods 
