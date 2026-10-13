@@ -7,6 +7,7 @@ from decimal import Decimal
 import datetime
 import os
 import unittest
+import psycopg
 
 
  #test behavior against a real database
@@ -162,8 +163,181 @@ class TestDBOperationsIntegrated(unittest.TestCase):
             engine.dispose()
 
 
+    def test_load_stations_into_db_duplicates_removed(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        dummy_stations = [
+            {"stationId": "01230", "longitude": 12.655, "latitude": 55.610, "name":"Silstrup"},
+            {"stationId": "01230", "longitude": 12.655, "latitude": 55.610, "name":"Silstrup"},
+            {"stationId": "00001", "longitude": 10.133, "latitude": 56.930, "name":"København"}
+        ]
+        try:
+            create_tables(cursor) #make tables
+            load_stations(dummy_stations, cursor)
+            cursor.execute("SELECT * FROM stations_data") #read tables
+            result = cursor.fetchall()
+            assert len(result) == 2
+            expected = [('01230', Decimal('12.655'), Decimal('55.610'), "Silstrup"),
+                        ('00001', Decimal('10.133'), Decimal('56.930'), "København")]
+
+            self.assertEqual(result, expected)
+        finally:
+            cursor.close()
+            connection.close()
+            engine.dispose()
+
+    def test_load_parameter_into_db_duplicates_removed(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        # dummy data for load_parameter
+        dummy_parameters = [
+            {"name": "temp", "unit": "Celsius", "frequency": "1h"},
+            {"name": "temp", "unit": "Celsius", "frequency": "1h"},
+            {"name": "humidity", "unit": "percent", "frequency": "1h"}
+        ]
+        try:
+            create_tables(cursor) #make tables
+            load_parameter(dummy_parameters, cursor)
+            cursor.execute("SELECT * FROM parameter_data") #read tables
+            result = cursor.fetchall()
+            assert len(result) == 2
+
+            expected =[('temp', 'Celsius', '1h'), 
+                       ('humidity', 'percent', '1h')]
+            
+            self.assertEqual(result, expected)
+        finally:
+            cursor.close()
+            connection.close()
+            engine.dispose()
+
+    def test_load_readings_into_db_duplicates_raises_unique_violation(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        dummy_stations = [
+            {"stationId": "01230", "longitude": 12.655, "latitude": 55.610, "name":"Silstrup"},
+        ]
+        dummy_parameters = [
+            {"name": "temp", "unit": "Celsius", "frequency": "1h"},
+        ]
+        dummy_readings = [
+            {"parameterId": "temp", "value": 12.3, "stationId": "01230",
+            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            {"parameterId": "temp", "value": 12.3, "stationId": "01230",
+            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+        ]
+
+        try:
+            create_tables(cursor) #make tables
+            load_parameter(dummy_parameters, cursor)
+            load_stations(dummy_stations, cursor)
+            
+            with self.assertRaises(psycopg.errors.UniqueViolation):
+                load_readings(dummy_readings, cursor)
+                
+        finally:
+            connection.rollback() #the transaction is aborted after the error - so roll it back before closing
+            cursor.close()
+            connection.close()
+            engine.dispose()
 
 
+    def test_load_stations_into_db_missing_key(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        dummy_stations = [
+            {"stationId": "01230", "longitude": 12.655, "latitude": 55.610, "name":"Silstrup"},
+            {"stationId": "00001", "longitude": 10.133, "latitude": 56.930}
+        ]
+        try:
+            create_tables(cursor) #make tables
+            with self.assertRaises(KeyError):
+                load_stations(dummy_stations, cursor)
+        finally:
+            cursor.close()
+            connection.close()
+            engine.dispose()
+
+
+
+    def test_load_stations_empty_integration(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        dummy_stations = []
+        try:
+            create_tables(cursor) #make tables
+            load_stations(dummy_stations, cursor)
+            cursor.execute("SELECT * FROM stations_data") #read tables
+            result = cursor.fetchall()
+            assert len(result) == 0
+            expected = []
+
+            self.assertEqual(result, expected)
+        finally:
+            cursor.close()
+            connection.close()
+            engine.dispose()
+
+
+
+    def test_load_parameter_empty_integration(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        # dummy data for load_parameter
+        dummy_parameters = []
+        try:
+            create_tables(cursor) #make tables
+            load_parameter(dummy_parameters, cursor)
+            cursor.execute("SELECT * FROM parameter_data") #read tables
+            result = cursor.fetchall()
+            assert len(result) == 0
+
+            expected =[]
+            
+            self.assertEqual(result, expected)
+        finally:
+            cursor.close()
+            connection.close()
+            engine.dispose()
+
+
+    def test_load_readings_empty_integration(self):
+        engine = get_engine()
+        connection = engine.raw_connection()
+        cursor = connection.cursor()
+        dummy_stations = [
+            {"stationId": "01230", "longitude": 12.655, "latitude": 55.610, "name":"Silstrup"},
+        ]
+        dummy_parameters = [
+            {"name": "temp", "unit": "Celsius", "frequency": "1h"},
+        ]
+        dummy_readings = []
+
+        try:
+            create_tables(cursor) #make tables
+            load_parameter(dummy_parameters, cursor)
+            load_stations(dummy_stations, cursor)
+            load_readings(dummy_readings,cursor)
+            
+            cursor.execute("SELECT * FROM readings_data") #read tables
+            result = cursor.fetchall()
+            assert len(result) == 0
+
+            expected =[]
+            
+            self.assertEqual(result, expected)
+                
+        finally:
+            connection.rollback() #the transaction is aborted after the error - so roll it back before closing
+            cursor.close()
+            connection.close()
+            engine.dispose()
 
 #--------------------------------------------------------------------------------------------------------------
 
@@ -214,11 +388,6 @@ class TestDBOperations(unittest.TestCase):
         connection.close.assert_called_once()
 
 
-    #TILFØJ TEST TIL ERROR HANDLING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    def test_commit_to_postgres_error_handling(self):
-        pass
-
-
     def test_create_tables(self):
         cursor = Mock() #create fake cursor
         # engine = get_engine()
@@ -227,6 +396,10 @@ class TestDBOperations(unittest.TestCase):
         create_tables(cursor)
 
         assert cursor.execute.call_count ==3 #assert .execute() method was called 3 times - one for each table created
+
+
+    def test_create_tables_twice(self): #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        pass
         
     def test_load_parameter(self):
         cursor = Mock()
@@ -255,6 +428,24 @@ class TestDBOperations(unittest.TestCase):
         load_readings(dummy_readings, cursor)
         assert cursor.execute.call_count ==1
 
+
+    def test_load_parameter_empty(self):
+        cursor = Mock()
+        dummy_parameters = []
+        load_parameter(dummy_parameters,cursor)
+        assert cursor.execute.call_count == 0
+
+    def test_load_stations_empty(self):
+        cursor = Mock()
+        dummy_stations = []
+        load_stations(dummy_stations, cursor)
+        assert cursor.execute.call_count ==0
+
+    def test_load_readings_empty(self):
+        cursor = Mock()
+        dummy_readings = []
+        load_readings(dummy_readings, cursor)
+        assert cursor.execute.call_count ==0
 
 if __name__ == '__main__':
     unittest.main()
