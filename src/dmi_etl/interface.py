@@ -97,7 +97,9 @@ class ErrorLogger():
 class UserInterface(ErrorLogger):
     def __init__(self):
         #self.is_ready = False
+        self.session_errors = []
         self.halt = 0
+        self.root = None
     
     def start(self): # create the root and add the widgets
         self.root = tk.Tk()
@@ -125,7 +127,7 @@ class UserInterface(ErrorLogger):
             self.is_ready = False
 
     def has_root(self): 
-            return hasattr(self, "root")
+        return self.root is not None
     
     def create_widgets(self):
         # if self.has_root == False:
@@ -206,12 +208,12 @@ class UserInterface(ErrorLogger):
     def get_selected_timeperiod(self) -> str:
         start_date_value = self.start_date.get_date()
         start_time_value = self.start_time.get()
-        if start_time_value == "":
-            start_time_value = "00:00:00"
+        # if start_time_value == "":
+        #     start_time_value = "00:00:00"
         end_date_value = self.end_date.get_date()
         end_time_value = self.end_time.get()
-        if end_time_value == "":
-            end_time_value = "00:00:00"
+        # if end_time_value == "":
+        #     end_time_value = "00:00:00"
 
         if validate_input(start_time_value, 'time') and validate_input(end_time_value, 'time'):
             start_datetime = f"{start_date_value}T{start_time_value}Z"
@@ -256,16 +258,16 @@ class UserInterface(ErrorLogger):
         api_parameters = package.get("api_parameters")
         return api_url, api_parameters
 
-if __name__ == "__main__":
-    ui = UserInterface()
-    ui.run()
-    #er = ErrorLogger()#UserInterface()
-    #er.set_root(ui.root)
-    time.sleep(0.5)
-    #er.session_errors = [("Error Message 1", str(datetime.datetime.now())), ("ERROR: Time value(s) does not adhere to format.", str(datetime.datetime.now())), ("Error Message 3", str(datetime.datetime.now()))]
-    #er.display_errors()
-    #ui.run()
-    #print(f"Constructed packages: {getattr(ui, "request_packages", [])}")
+# if __name__ == "__main__":
+#     ui = UserInterface()
+#     ui.run()
+#     #er = ErrorLogger()#UserInterface()
+#     #er.set_root(ui.root)
+#     time.sleep(0.5)
+    # #er.session_errors = [("Error Message 1", str(datetime.datetime.now())), ("ERROR: Time value(s) does not adhere to format.", str(datetime.datetime.now())), ("Error Message 3", str(datetime.datetime.now()))]
+    # #er.display_errors()
+    # #ui.run()
+    # #print(f"Constructed packages: {getattr(ui, "request_packages", [])}")
     
     
     

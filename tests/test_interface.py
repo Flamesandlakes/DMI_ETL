@@ -1,5 +1,5 @@
 from dmi_etl.interface import UserInterface, validate_input, ErrorLogger
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 from unittest.mock import patch
 import tkinter
 import datetime
@@ -127,7 +127,68 @@ class Test_ErrorLogger(unittest.TestCase):
         self.assertIn("another simulated error", mock_mb.call_args[0][1])
         self.assertIn("1) error(s)", mock_mb.call_args[0][1])
         
-        
+class TestUserInterface(unittest.TestCase):
+    def setUp(self):
+        self.ui = UserInterface()
+        # Inject mocks for every widget get_user_input() touches
+        self.ui.api_source_choice = MagicMock()
+        self.ui.parameter_choice = MagicMock()
+        self.ui.start_date = MagicMock()
+        self.ui.start_time = MagicMock()
+        self.ui.end_date = MagicMock()
+        self.ui.end_time = MagicMock()
+        self.ui.bbox_entry = MagicMock()
+        self.ui.limit_entry = MagicMock()
+
+    def test_get_user_input_builds_packages(self):
+        self.ui.api_source_choice.get.return_value = "DMI readings"
+        self.ui.parameter_choice.curselection.return_value = [0, 1] # simulate n of chosen parameters
+        self.ui.parameter_choice.get.side_effect = ["temp_mean_past1h", "wind_speed_past1h"] # the name of the chosen parameters
+        self.ui.start_date.get_date.return_value = "2026-10-01"
+        self.ui.start_time.get.return_value = "00:00:00"
+        self.ui.end_date.get_date.return_value = "2026-10-02"
+        self.ui.end_time.get.return_value = "00:00:00"
+        self.ui.bbox_entry.get.return_value = "7,54,16,58"
+        self.ui.limit_entry.get.return_value = "100"
+
+        self.ui.get_user_input()
+
+        self.assertEqual(len(self.ui.request_packages), 2)
+        pkg = self.ui.request_packages[0]
+        self.assertEqual(pkg["api"], "DMI readings")
+        self.assertEqual(pkg["api_url"],
+                         "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items")
+        self.assertEqual(pkg["api_parameters"]["parameterId"], "temp_mean_past1h")
+        self.assertEqual(pkg["api_parameters"]["limit"], "100")
+
+    def test_invalid_time_logs_error(self):
+        with patch("dmi_etl.interface"):#.messagebox.askretrycancel"):
+            self.assertEqual(self.ui.get_selected_timeperiod(), "")
+
+    def test_no_parameters_selected_yields_empty_packages(self):
+        self.ui.parameter_choice.curselection.return_value = []
+        self.ui.get_user_input()
+        self.assertEqual(self.ui.request_packages, [])
+
+
+### Partially generated tests for widget methods 
+@unittest.skipUnless(hasattr(tkinter, "Tk"), "Tk available")
+class TestWidgets(unittest.TestCase):
+    def setUp(self):
+        try:
+            self.ui = UserInterface()
+            self.ui.start()
+            self.addCleanup(self.ui.cleanup)
+        except tkinter.TclError:   # no $DISPLAY
+            raise unittest.SkipTest("No display available")
+
+    def test_update_parameters_populates_listbox(self):
+        self.ui.api_source_choice.set("DMI readings")
+        self.ui.update_parameters(None)
+        params = list(self.ui.parameter_choice.get(0, tkinter.END))
+        self.assertIn("temp_mean_past1h", params)
+
+
 # class Test_MockUserInterface(unittest.TestCase):
 #     def setUp(self):
 #         print("test, setup a")
