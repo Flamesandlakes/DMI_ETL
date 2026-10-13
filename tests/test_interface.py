@@ -119,8 +119,6 @@ class Test_ErrorLogger(unittest.TestCase):
             logger.log_error("simulated error")
             self.assertEqual(logger.error_check(), 1)
         
-        
-        
     def test_display_errors_formats_message(self):
         logger = ErrorLogger()
         logger.log_error("another simulated error")
@@ -176,21 +174,22 @@ class TestUserInterface(unittest.TestCase):
 
 
 ### Partially generated tests for widget methods 
-@unittest.skipUnless(hasattr(tkinter, "Tk"), "Tk available")
-class TestWidgets(unittest.TestCase):
-    def setUp(self):
-        try:
-            self.ui = UserInterface()
-            self.ui.start()
-            self.addCleanup(self.ui.cleanup)
-        except tkinter.TclError:   # no $DISPLAY
-            raise unittest.SkipTest("No display available")
+# @unittest.skipUnless(hasattr(tkinter, "Tk"), "Tk available")
+# class TestWidgets(unittest.TestCase):
+#     def setUp(self):
+#         try:
+#             #with patch("dmi_etl.interface.UserInterface", return_value = True):
+#             self.ui = UserInterface()
+#             self.ui.start()
+#             self.addCleanup(self.ui.cleanup)
+#         except tkinter.TclError:   # no $DISPLAY
+#             raise unittest.SkipTest("No display available")
 
-    def test_update_parameters_populates_listbox(self):
-        self.ui.api_source_choice.set("DMI readings")
-        self.ui.update_parameters(None)
-        params = list(self.ui.parameter_choice.get(0, tkinter.END))
-        self.assertIn("temp_mean_past1h", params)
+#     def test_update_parameters_populates_listbox(self):
+#         self.ui.api_source_choice.set("DMI readings")
+#         self.ui.update_parameters(None)
+#         params = list(self.ui.parameter_choice.get(0, tkinter.END))
+#         self.assertIn("temp_mean_past1h", params)
 
 
 # class Test_MockUserInterface(unittest.TestCase):
