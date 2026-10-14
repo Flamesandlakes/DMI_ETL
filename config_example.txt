@@ -1,6 +1,6 @@
 [Credentials]
-username = [the username you selected when setting up the database]
-password = [the password you selected when setting up the database]
-host = vejrdatabase
+username = [POSTGRES_USER from compose.yaml]
+password = [POSTGRES_PASSWORD from compose.yaml]
+host = localhost
 port = 5432 
-db_name = [the name you selected when setting up the database]
+db_name = [POSTGRES_DB from compose.yaml]

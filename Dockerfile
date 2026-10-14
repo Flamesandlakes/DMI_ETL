@@ -1,24 +1,24 @@
-FROM python:3.14-slim
+# FROM python:3.14-slim
 
-ENV PYTHONUNBUFFERED=1
+# ENV PYTHONUNBUFFERED=1
 
-# ?
-WORKDIR /app
+# # ?
+# WORKDIR /app
 
-# ?
-COPY . /app
+# # ?
+# COPY . /app
 
-# # install dependencies
-# COPY requirements.txt requirements.txt
-# RUN pip install --no-cache-dir -r requirements.txt
+# # # install dependencies
+# # COPY requirements.txt requirements.txt
+# # RUN pip install --no-cache-dir -r requirements.txt
 
-# remove expose ???
-#EXPOSE 5432 
+# # remove expose ???
+# #EXPOSE 5432 
 
-# for data persistence
-# VOLUME /var/lib/postgresql/data 
+# # for data persistence
+# # VOLUME /var/lib/postgresql/data 
 
-# ?
-ENV PYTHONPATH=/app/src
-CMD ["python", "src/dmi_etl/main.py"]
+# # ?
+# ENV PYTHONPATH=/app/src
+# CMD ["python", "src/dmi_etl/main.py"]
 
