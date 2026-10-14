@@ -103,6 +103,7 @@ class UserInterface(ErrorLogger):
     
     def start(self): # create the root and add the widgets
         self.root = tk.Tk()
+        #print("root type:", type(self.root))
         self.root.title("Define API call")
         self.root.geometry("850x450")
         self.create_widgets()
@@ -233,6 +234,8 @@ class UserInterface(ErrorLogger):
         if validate_input(bbox_entry_value, "coordinates") == False:
             self.log_error("ERROR: Coordinate sets does not adhere to format.")
         limit_entry_value = self.limit_entry.get()
+        if limit_entry_value == "-1":
+            limit_entry_value = "300000" # the max possible value accepted by the api
         if validate_input(limit_entry_value, "integer") == False:
             self.log_error("ERROR: Limit not set as an integer.")
         request_packages = [] # create a request package for each selected parameter (since multiple parameterIds will otherwise conflict with the API)
