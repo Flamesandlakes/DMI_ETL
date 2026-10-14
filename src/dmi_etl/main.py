@@ -2,12 +2,14 @@ from dmi_etl.extract import *
 from dmi_etl.transform import *
 from dmi_etl.DB_operations import *
 from dmi_etl.interface import UserInterface
-
+import sys
 
 if __name__ == "__main__":
     ui = UserInterface()
     ui.run()
-
+    if ui.halt == 1:
+        print("Session exited.")
+        sys.exit()
     all_listOfDicts = []
     all_uniqueStationIds = []
     all_weather_stations = []
