@@ -172,6 +172,27 @@ class TestUserInterface(unittest.TestCase):
             self.ui.get_user_input()
             self.assertEqual(self.ui.request_packages, [])
 
+class TestWidgets(unittest.TestCase):
+    @patch("dmi_etl.interface.tk.Tk")  # point to module where interface is located
+    def test_start_calls_add_widgets(self, mock_tk_obj):
+        mock_root = MagicMock()
+        mock_tk_obj.return_value = mock_root
+
+        ui = UserInterface()
+
+        # replace the add_widgets method with a mock
+        ui.create_widgets = MagicMock()
+
+        ui.start()
+        print(type(ui.root)) 
+
+        # assertions
+        mock_tk_obj.assert_called_once()
+        mock_root.title.assert_called_once_with("Define API call")
+        ui.create_widgets.assert_called_once() # assert that add_widgets method was executed
+        assert mock_root.mainloop.call_count == 0 # the mainloop should not be called in the mock
+
+
 
 ### Partially generated tests for widget methods 
 # @unittest.skipUnless(hasattr(tkinter, "Tk"), "Tk available")
