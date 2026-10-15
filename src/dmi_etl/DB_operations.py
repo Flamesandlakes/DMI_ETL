@@ -72,71 +72,68 @@ def commit_to_postgres(stationList, parameterList, readingList):
 
 def load_stations(dict_list, cursor):
     """
-    Insert data into stations_data table
-    Args: a list of dictionaries where each dictionary is one reading
+    Insert data into stations_data table. If the same station_id primary key is attempted to be inserted, it will be ignored.
+    Args: a list of dictionaries where each dictionary is one row of station data
     """
-    for reading in dict_list:
-        #load stations
+    for dictionary in dict_list:
         cursor.execute("INSERT INTO stations_data(station_id, longitude, latitude, location_name) VALUES (%s, %s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
-        (reading["stationId"], reading["longitude"], reading["latitude"], reading["name"]),
+        (dictionary["stationId"], dictionary["longitude"], dictionary["latitude"], dictionary["name"]),
         )
 
 
 def load_parameter(dict_list, cursor):
     """
-    Insert data into parameter_data table
-    Args: a list of dictionaries where each dictionary is one reading
+    Insert data into parameter_data table. If the same primary key name is attempted to be inserted, it will be ignored
+    Args: a list of dictionaries where each dictionary is one row of parameter data
     """
-    for reading in dict_list:
-       # load parameter
+    for dictionary in dict_list:
         cursor.execute("INSERT INTO parameter_data(name, unit, frequency) VALUES (%s, %s, %s) ON CONFLICT(name) DO NOTHING",
-                       (reading["name"], reading["unit"], reading["frequency"]),
+                       (dictionary["name"], dictionary["unit"], dictionary["frequency"]),
         )
 
 def load_readings(dict_list, cursor):
     """
-    Insert data into readings_data table
+    Insert data into readings_data table. If the same combination of (station_id, parameter_name, date, time) is attempted to be inserted, it will be ignored.
     Args: a list of dictionaries where each dictionary is one reading
     """
-    for reading in dict_list:
-        # load readings
-        cursor.execute("INSERT INTO readings_data(parameter_name, value, station_id, time, date) VALUES(%s, %s, %s, %s, %s)",
-                       (reading["parameterId"], reading["value"], reading["stationId"], reading["observedTime"], reading["observedDate"]),
+    for dictionary in dict_list:
+        cursor.execute("INSERT INTO readings_data(parameter_name, value, station_id, time, date) VALUES(%s, %s, %s, %s, %s)" \
+        " ON CONFLICT (station_id, parameter_name, date, time) DO NOTHING",
+                       (dictionary["parameterId"], dictionary["value"], dictionary["stationId"], dictionary["observedTime"], dictionary["observedDate"]),
         )
 
+# if __name__ == "__main__":
 
-if __name__ == "__main__":
+#     # dummy data for testing the station part of load_data
+#     dummy_stations = [
+#         {"stationId": "01230", "longitude": 12.655, "latitude": 55.610},
+#         {"stationId": "01234", "longitude": 9.888, "latitude": 57.000},
 
-    # dummy data for testing the station part of load_data
-    dummy_stations = [
-        {"stationId": "01230", "longitude": 12.655, "latitude": 55.610},
-        {"stationId": "01234", "longitude": 9.888, "latitude": 57.000},
+#         {"stationId": "00001", "longitude": 10.133, "latitude": 56.930}
+#     ]
 
-        {"stationId": "00001", "longitude": 10.133, "latitude": 56.930}
-    ]
+#     # dummy data for load_parameter
+#     dummy_parameters = [
+#         {"name": "temp", "unit": "Celsius", "frequency": "1h"},
+#         {"name": "humidity", "unit": "percent", "frequency": "1h"},
+#     ]
 
-    # dummy data for load_parameter
-    dummy_parameters = [
-        {"name": "temp", "unit": "Celsius", "frequency": "1h"},
-        {"name": "humidity", "unit": "percent", "frequency": "1h"},
-    ]
+#     # dummy data for load_readings
+#     dummy_readings = [
+#         {"parameterId": "temp", "value": 12.3, "stationId": "01230",
+#          "time": "12:00:00", "date": "2026-10-01"},
 
-    # dummy data for load_readings
-    dummy_readings = [
-        {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-         "time": "12:00:00", "date": "2026-10-01"},
+#         {"parameterId": "humidity", "value": 81.5, "stationId": "01230",
+#          "time": "12:00:00", "date": "2026-10-01"},
 
-        {"parameterId": "humidity", "value": 81.5, "stationId": "01230",
-         "time": "12:00:00", "date": "2026-10-01"},
+#         {"parameterId": "temp", "value": 11.8, "stationId": "01234",
+#          "time": "12:00:00", "date": "2026-10-01"},
 
-        {"parameterId": "temp", "value": 11.8, "stationId": "01234",
-         "time": "12:00:00", "date": "2026-10-01"},
+#         {"parameterId": "temp", "value": 13.1, "stationId": "00001",
+#          "time": "13:00:00", "date": "2026-10-01"},
+#     ]
 
-        {"parameterId": "temp", "value": 13.1, "stationId": "00001",
-         "time": "13:00:00", "date": "2026-10-01"},
-    ]
-
-    commit_to_postgres(dummy_stations, dummy_parameters, dummy_readings)
+#     commit_to_postgres(dummy_stations, dummy_parameters, dummy_readings)
 
     # engine = get_engine()
     # # a raw database connection that allows direct interaction with the database. connecting to database

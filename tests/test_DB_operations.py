@@ -213,7 +213,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
             connection.close()
             engine.dispose()
 
-    def test_load_readings_into_db_duplicates_raises_unique_violation(self):
+    def test_load_readings_into_db_duplicates_removed(self):
         engine = get_engine()
         connection = engine.raw_connection()
         cursor = connection.cursor()
@@ -232,14 +232,19 @@ class TestDBOperationsIntegrated(unittest.TestCase):
 
         try:
             create_tables(cursor) #make tables
-            load_parameter(dummy_parameters, cursor)
+            load_parameter(dummy_parameters,cursor)
             load_stations(dummy_stations, cursor)
+
+            load_readings(dummy_readings, cursor)
+            cursor.execute("SELECT parameter_name, value, station_id, time, date FROM readings_data")
+            result = cursor.fetchall()
+            assert len(result) == 1
+
+            expected = [('temp', Decimal('12.30'), '01230', datetime.time(12, 0), 
+                         datetime.date(2026, 10, 1))]
             
-            with self.assertRaises(psycopg.errors.UniqueViolation):
-                load_readings(dummy_readings, cursor)
-                
+            self.assertEqual(result, expected)
         finally:
-            connection.rollback() #the transaction is aborted after the error - so roll it back before closing
             cursor.close()
             connection.close()
             engine.dispose()
