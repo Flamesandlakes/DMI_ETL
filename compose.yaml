@@ -16,6 +16,28 @@ services:
       timeout: 5s
       retries: 5
 
+  # server:
+  #   image: postgrest/postgrest
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     PGRST_SERVER_HOST: 0.0.0.0 # necessary for `postgrest --ready` flag to work
+  #     PGRST_DB_URI: postgres://postgres:4321@vejrdatabase:5432/weatherdb
+  #     PGRST_OPENAPI_SERVER_PROXY_URI: http://127.0.0.1:3000
+  #     PGRST_DB_SCHEMAS: climate
+  #     PGRST_DB_ANON_ROLE: anon_user
+  #   depends_on:
+  #     - vejrdatabase
+  
+  # # in services:
+  # swagger:
+  #   image: swaggerapi/swagger-ui
+  #   ports:
+  #     - "8080:8080"
+  #   expose:
+  #     - "8080"
+  #   environment:
+  #     API_URL: http://localhost:3000/
   # python_app:
   #   build: .
   #   container_name: python_app

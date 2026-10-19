@@ -4,9 +4,10 @@
 #import requests
 from sqlalchemy import create_engine, URL
 import configparser
-from dmi_etl.table_setup import create_parameter_table_query, create_readings_table_query, create_station_table_query
+from dmi_etl.table_setup import create_schema_query, create_parameter_table_query, create_readings_table_query, create_station_table_query
 from pathlib import Path
 import os
+from dmi_etl.api_setup import *
 
 def get_engine():
     """
@@ -35,7 +36,7 @@ def create_tables(cursor):
     """
     creating the table using the cursor
     """
-    queries = [create_station_table_query,create_parameter_table_query,create_readings_table_query]
+    queries = [create_schema_query, create_station_table_query,create_parameter_table_query,create_readings_table_query]
     for q in queries:
         cursor.execute(q)
 
@@ -76,7 +77,7 @@ def load_stations(dict_list, cursor):
     Args: a list of dictionaries where each dictionary is one row of station data
     """
     for dictionary in dict_list:
-        cursor.execute("INSERT INTO stations_data(station_id, longitude, latitude, location_name) VALUES (%s, %s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
+        cursor.execute("INSERT INTO climate.stations_data(station_id, longitude, latitude, location_name) VALUES (%s, %s, %s, %s) ON CONFLICT (station_id) DO NOTHING",
         (dictionary["stationId"], dictionary["longitude"], dictionary["latitude"], dictionary["name"]),
         )
 
@@ -87,7 +88,7 @@ def load_parameter(dict_list, cursor):
     Args: a list of dictionaries where each dictionary is one row of parameter data
     """
     for dictionary in dict_list:
-        cursor.execute("INSERT INTO parameter_data(name, unit, frequency) VALUES (%s, %s, %s) ON CONFLICT(name) DO NOTHING",
+        cursor.execute("INSERT INTO climate.parameter_data(name, unit, frequency) VALUES (%s, %s, %s) ON CONFLICT(name) DO NOTHING",
                        (dictionary["name"], dictionary["unit"], dictionary["frequency"]),
         )
 
@@ -97,7 +98,7 @@ def load_readings(dict_list, cursor):
     Args: a list of dictionaries where each dictionary is one reading
     """
     for dictionary in dict_list:
-        cursor.execute("INSERT INTO readings_data(parameter_name, value, station_id, time, date) VALUES(%s, %s, %s, %s, %s)" \
+        cursor.execute("INSERT INTO climate.readings_data(parameter_name, value, station_id, time, date) VALUES(%s, %s, %s, %s, %s)" \
         " ON CONFLICT (station_id, parameter_name, date, time) DO NOTHING",
                        (dictionary["parameterId"], dictionary["value"], dictionary["stationId"], dictionary["observedTime"], dictionary["observedDate"]),
         )
