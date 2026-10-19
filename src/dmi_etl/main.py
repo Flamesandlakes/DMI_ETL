@@ -15,6 +15,7 @@ if __name__ == "__main__":
     all_weather_stations = []
 
     # Go through each package
+    print("Calling API ...")
     for package in ui.request_packages:
         # Unpack the package to get the url and parameters
         url, parameters = ui.get_url_and_params(package)
@@ -26,11 +27,12 @@ if __name__ == "__main__":
         all_listOfDicts.extend(listOfDicts)
 
         # Collect supplementary (but also required) data on stations in extracted data
-        uniqueStationIds = Get_Unique_Dict_Items_From_List(listOfDicts, "stationId")
+        uniqueStationIds = set(Get_Unique_Dict_Items_From_List(listOfDicts, "stationId"))
         stations_to_request = []
         for id in uniqueStationIds:
             if id not in all_uniqueStationIds:
                 stations_to_request.append(id)
+                all_uniqueStationIds.append(id)
 
         weather_stations = get_station_data(stations_to_request)
 
@@ -39,8 +41,9 @@ if __name__ == "__main__":
         # something something, convert the format of weather_stations to the one below for each entry:
         # [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
 
+        #all_uniqueStationIds = all_uniqueStationIds.union(uniqueStationIds)
         all_weather_stations.extend(weather_stations)
-
+    print(f"Data collected for all chosen parameters.\nNow loading ...")
     parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"},
                       {"name":"humidity_past1h", "unit":"Percent", "frequency":"Hourly"},
                       {"name":"precip_past1h", "unit":"Kilograms per Square Meter", "frequency":"Hourly"},
@@ -50,7 +53,7 @@ if __name__ == "__main__":
     #parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"}]
 
     commit_to_postgres(all_weather_stations,parameter_info,all_listOfDicts)
-
+    print("... Data successfully loaded.")
     # #print(listOfDicts)
     # engine = get_engine()
     # # a raw database connection that allows direct interaction with the database
