@@ -11,10 +11,10 @@ create_readings_table_query = """
                 date date,
                 CONSTRAINT fk_stations
                 FOREIGN KEY (station_id) 
-                REFERENCES stations_data(station_id),
+                REFERENCES climate.stations_data(station_id),
                 CONSTRAINT fk_parameter
                 FOREIGN KEY (parameter_name)
-                REFERENCES parameter_data(name),
+                REFERENCES climate.parameter_data(name),
                 CONSTRAINT unique_reading UNIQUE (station_id, parameter_name, date, time)
                 )
             """

@@ -14,7 +14,8 @@ Base = sqlalchemy.orm.declarative_base()
 
 
 class Parameter(Base):
-    __tablename__ = "climate.parameter_data"
+    __tablename__ = "parameter_data"
+    __table_args__ = {"schema": "climate"}
     name = Column(String, primary_key=True)
     unit = Column(String)
     frequency = Column(String)
@@ -41,6 +42,15 @@ class ParameterResponse(BaseModel):
     unit: str
     frequency: str
 
+# GET options for readings
+# parameter or
+# stationId or
+# time (start and end time /potentially as T-seperated datetime obj string)
+
+# GET options for station (and stations)
+# stationid or
+# station name
+
 Base.metadata.create_all(bind=engine)
 
 def get_db():
@@ -59,10 +69,10 @@ async def create_item(parameter: ParameterCreate, db: Session = Depends(get_db))
     return db_parameter
 
 @app.get("/parameters/{name}", response_model=ParameterResponse)
-async def read_item(name: str, db: Session = Depends(get_db)):
+async def read_parameter(name: str, db: Session = Depends(get_db)):
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first()
     if db_parameter is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="Parameter not found")
     return db_parameter
 
 if __name__ == "__main__":
