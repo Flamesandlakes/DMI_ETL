@@ -7,7 +7,6 @@ import configparser
 from dmi_etl.table_setup import create_schema_query, create_parameter_table_query, create_readings_table_query, create_station_table_query
 from pathlib import Path
 import os
-from dmi_etl.api_setup import *
 
 def get_engine():
     """
