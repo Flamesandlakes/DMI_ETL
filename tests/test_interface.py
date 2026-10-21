@@ -172,6 +172,63 @@ class TestUserInterface(unittest.TestCase):
             self.ui.get_user_input()
             self.assertEqual(self.ui.request_packages, [])
 
+    def test_no_parameters_selected_yields_empty_packages(self):
+            self.ui.api_source_choice.get.return_value = "DMI readings"
+            self.ui.parameter_choice.curselection.return_value = [1] # simulate n of chosen parameters
+            self.ui.parameter_choice.get.side_effect = ["wind_speed_past1h"] # the name of the chosen parameters
+            self.ui.start_date.get_date.return_value = "2026-10-01"
+            self.ui.start_time.get.return_value = "100:00:00"
+            self.ui.end_date.get_date.return_value = "2026-10-02"
+            self.ui.end_time.get.return_value = "00:00:00"
+            self.ui.bbox_entry.get.return_value = "7,16,58"
+            self.ui.limit_entry.get.return_value = "hundred"
+            self.ui.parameter_choice.curselection.return_value = []
+            with patch("dmi_etl.interface.messagebox.askretrycancel", return_value = True):
+                self.ui.get_user_input()
+                self.assertEqual(self.ui.request_packages, [])
+
+    def test_mock_run(self):
+        ui = UserInterface()
+        ui.has_root = MagicMock()
+        ui.has_root.return_value = True
+        ui.start = MagicMock()
+        ui.root = MagicMock()
+        ui.root.mainloop = MagicMock()
+        
+        ui.run()
+        assert ui.root.mainloop.call_count == 1
+
+    def test_mocked_cleanup(self):
+        ui = UserInterface()
+        ui.has_root = MagicMock()
+        ui.has_root.return_value = True
+        ui.root = tkinter.Tk()
+        ui.root.destroy = MagicMock()
+
+        ui.cleanup()
+        assert ui.root == None
+
+    def test_limit_shortcut(self):
+        self.ui.api_source_choice.get.return_value = "DMI readings"
+        self.ui.parameter_choice.curselection.return_value = [0] # simulate n of chosen parameters
+        self.ui.parameter_choice.get.side_effect = ["temp_mean_past1h"] # the name of the chosen parameters
+        self.ui.start_date.get_date.return_value = "2026-10-01"
+        self.ui.start_time.get.return_value = "00:00:00"
+        self.ui.end_date.get_date.return_value = "2026-10-02"
+        self.ui.end_time.get.return_value = "00:00:00"
+        self.ui.bbox_entry.get.return_value = "7,54,16,58"
+        self.ui.limit_entry.get.return_value = "-1"
+
+        self.ui.get_user_input()
+
+        self.assertEqual(len(self.ui.request_packages), 1)
+        pkg = self.ui.request_packages[0]
+        self.assertEqual(pkg["api"], "DMI readings")
+        self.assertEqual(pkg["api_url"],
+                        "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items")
+        self.assertEqual(pkg["api_parameters"]["parameterId"], "temp_mean_past1h")
+        self.assertEqual(pkg["api_parameters"]["limit"], "300000")
+
 class TestWidgets(unittest.TestCase):
     @patch("dmi_etl.interface.tk.Tk")  # point to module where interface is located
     def test_start_calls_add_widgets(self, mock_tk_obj):

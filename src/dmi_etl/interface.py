@@ -96,7 +96,6 @@ class ErrorLogger():
 
 class UserInterface(ErrorLogger):
     def __init__(self):
-        #self.is_ready = False
         self.session_errors = []
         self.halt = 0
         self.root = None
@@ -125,7 +124,6 @@ class UserInterface(ErrorLogger):
         if self.has_root():
             self.root.destroy()
             self.root = None
-            self.is_ready = False
 
     def has_root(self): 
         return self.root is not None
