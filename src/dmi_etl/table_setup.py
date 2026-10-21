@@ -1,5 +1,5 @@
 # sql syntax to create the table that would hold data
-create_schema_query = "CREATE SCHEMA climate;"
+create_schema_query = "CREATE SCHEMA IF NOT EXISTS climate;"
  
 create_readings_table_query = """
     CREATE TABLE IF NOT EXISTS climate.readings_data(
