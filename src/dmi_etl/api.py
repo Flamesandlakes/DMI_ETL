@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, Numeric, Time, Date, Identity
 from sqlalchemy.orm import sessionmaker, Session
 import sqlalchemy
 from pydantic import BaseModel
@@ -12,7 +12,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = sqlalchemy.orm.declarative_base()
 
 
-
 class Parameter(Base):
     __tablename__ = "parameter_data"
     __table_args__ = {"schema": "climate"}
@@ -20,16 +19,23 @@ class Parameter(Base):
     unit = Column(String)
     frequency = Column(String)
 
-# class Station(Base):
-#     __tablename__ = "climate.station_data"
-#     station_id = Column(String, primary_key=True, index=True)
-#     longitude = Column(Decimal)
-#     latitude = Column(Decimal)
-#     location_name = Column(String)
+class Station(Base):
+    __tablename__ = "station_data"
+    __table_args__ = {"schema": "climate"}
+    station_id = Column(String, primary_key=True, index=True)
+    longitude = Column(Numeric(6,3))
+    latitude = Column(Numeric(6,3))
+    location_name = Column(String)
 
-# class Reading(Base):
-#     __tablename__ = "climate.readings_data"
-#     parameter_name = Column(String)
+class Reading(Base):
+    __tablename__ = "readings_data"
+    __table_args__ = {"schema": "climate"}
+    parameter_name = Column(String)
+    value = Column(Numeric(6,3))
+    reading_id = Column(Integer, Identity(always=True), primary_key=True)
+    station_id = Column(String)
+    time = Column(Time)
+    date = Column(Date)
 
 
 class ParameterCreate(BaseModel):
