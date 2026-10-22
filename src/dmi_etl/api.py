@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Numeric, Time, Da
 from sqlalchemy.orm import sessionmaker, Session
 import sqlalchemy
 from pydantic import BaseModel
+from dmi_etl.api_auth import app as auth_router
 
 from dmi_etl.DB_operations import *
 
@@ -11,7 +12,11 @@ engine = get_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = sqlalchemy.orm.declarative_base()
 
+# integrate method from authentication
+#app.post = dmi_etl.api_auth.app.post
+app.include_router(auth_router) 
 
+# CRUD, first defining format of respective database rows/entries, and then the CRUD methods themselves
 class Parameter(Base):
     __tablename__ = "parameter_data"
     __table_args__ = {"schema": "climate"}
@@ -80,6 +85,8 @@ async def read_parameter(name: str, db: Session = Depends(get_db)):
     if db_parameter is None:
         raise HTTPException(status_code=404, detail="Parameter not found")
     return db_parameter
+
+
 
 if __name__ == "__main__":
     import uvicorn

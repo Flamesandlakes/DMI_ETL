@@ -2,13 +2,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, APIRouter
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 
 from pwdlib import PasswordHash
 from jwt.exceptions import InvalidTokenError
+
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
@@ -34,7 +35,7 @@ password_hash = PasswordHash.recommended()
 DUMMY_HASH = password_hash.hash("dummypassword")
 
 # define app (later given methods)
-app = FastAPI()
+app = APIRouter() #FastAPI()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
