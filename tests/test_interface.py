@@ -229,7 +229,34 @@ class TestUserInterface(unittest.TestCase):
         self.assertEqual(pkg["api_parameters"]["parameterId"], "temp_mean_past1h")
         self.assertEqual(pkg["api_parameters"]["limit"], "300000")
 
-class TestWidgets(unittest.TestCase):
+class TestWidgetsMethods(unittest.TestCase):
+    def setUp(self):
+        # Patch where the code under test looks the names up
+        patcher_tk = unittest.mock.patch("dmi_etl.interface.tk")
+        patcher_ttk = unittest.mock.patch("dmi_etl.interface.ttk")
+        patcher_dateentry = unittest.mock.patch("dmi_etl.interface.DateEntry")
+
+        self.mock_tk = patcher_tk.start()
+        self.mock_ttk = patcher_ttk.start()
+        self.mock_dateentry = patcher_dateentry.start()
+        self.addCleanup(patcher_tk.stop)
+        self.addCleanup(patcher_ttk.stop)
+        self.addCleanup(patcher_dateentry.stop)
+
+        # Simple value-holder standing in for StringVar
+        self.mock_tk.StringVar.side_effect = lambda master, value="": {"value": value}
+
+        # Build the instance without running __init__ (which needs a real Tk root)
+        self.app = UserInterface()
+        self.app.root = MagicMock()
+        self.app.api_source_choice = MagicMock()
+        self.app.parameter_choice = MagicMock()
+        
+        self.app.submit_and_continue = MagicMock()
+        self.app.halt_pipeline = MagicMock()
+
+        self.app.create_widgets()
+    
     @patch("dmi_etl.interface.tk.Tk")  # point to module where interface is located
     def test_start_calls_add_widgets(self, mock_tk_obj):
         mock_root = MagicMock()
@@ -248,6 +275,29 @@ class TestWidgets(unittest.TestCase):
         mock_root.title.assert_called_once_with("Define API call")
         ui.create_widgets.assert_called_once() # assert that add_widgets method was executed
         assert mock_root.mainloop.call_count == 0 # the mainloop should not be called in the mock
+        
+    def test_widget_labels_created(self):
+        actual = [c.kwargs["text"] for c in self.mock_tk.Label.call_args_list]
+        expected = [
+            "Choose API",
+            "Choose parameter",
+            "Specify start date",
+            "Specify start time\n (FORMAT: HH:MM:SS)",
+            "Specify end date",
+            "Specify end time\n (FORMAT: HH:MM:SS)",
+            "Set coordinates for readings area,\n bound by SE point to NW point\n (FORMAT: W,S,E,N)",
+            "Set limit\n (Number of readings to retrieve, per parameter)",
+        ]
+        self.assertEqual(actual, expected)
+
+    def test_every_label_is_gridded(self):
+        self.assertEqual(self.mock_tk.Label.return_value.grid.call_count, 8)
+        
+    def test_update_parameters_reads_combobox_selection(self):
+        with unittest.mock.patch("dmi_etl.interface.API_parameters", {}):
+            self.app.update_parameters(event=MagicMock())
+
+        self.app.api_source_choice.get.assert_called_once_with()
 
 
 
