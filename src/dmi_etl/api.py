@@ -11,7 +11,7 @@ engine = get_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = sqlalchemy.orm.declarative_base()
 
-
+#Define a SQLAlchemy models to store data in the database. Describes the tables in our schema
 class Parameter(Base):
     __tablename__ = "parameter_data"
     __table_args__ = {"schema": "climate"}
@@ -37,12 +37,17 @@ class Reading(Base):
     time = Column(Time)
     date = Column(Date)
 
-
+#Pydantic models - describes what the client is allowed to send
 class ParameterCreate(BaseModel):
     name: str
     unit: str
     frequency: str
 
+class ParameterUpdate(BaseModel): #client is only allowed to change unit and frequency as name is primary key and readings_data has foerign key to it.
+    unit: str
+    frequency: str
+
+#describes what the server sends back
 class ParameterResponse(BaseModel):
     name: str
     unit: str
@@ -67,8 +72,8 @@ def get_db():
         db.close()
 
 @app.post("/parameters/", response_model=ParameterResponse)
-async def create_item(parameter: ParameterCreate, db: Session = Depends(get_db)):
-    db_parameter = Parameter(**parameter.model_dump())
+async def create_parameter(parameter: ParameterCreate, db: Session = Depends(get_db)):
+    db_parameter = Parameter(**parameter.model_dump()) #dictionary representation of the model
     db.add(db_parameter)
     db.commit()
     db.refresh(db_parameter)
@@ -80,6 +85,39 @@ async def read_parameter(name: str, db: Session = Depends(get_db)):
     if db_parameter is None:
         raise HTTPException(status_code=404, detail="Parameter not found")
     return db_parameter
+
+#replace the resource with what the client sends
+#if the parameter exists, it will be overwritten
+#if parameter does not exist, respond  with 404
+#the response is the updated parameter
+@app.put("/parameters/{name}", response_model=ParameterResponse) #fetch the name from the url
+async def update_parameter(name: str, paramUpdate:ParameterUpdate, db: Session = Depends(get_db)):
+    db_parameter = db.query(Parameter).filter(Parameter.name == name).first() #from the db, get the row with the name from the url.
+    #parameter does not exist, respond with 404
+    if db_parameter is None:
+        raise HTTPException(status_code=404, detail="Parameter not found")
+    #parameter does exist, so overwrite it
+    db_parameter.unit = paramUpdate.unit
+    db_parameter.frequency = paramUpdate.frequency
+    #db.add(db_parameter)
+    db.commit()
+    db.refresh(db_parameter) #ask db to send the row again and update the object with fresh values
+    return db_parameter
+
+
+@app.delete("/parameters/{name}", status_code=204)
+async def delete_parameter(name:str, db: Session = Depends(get_db)):
+    db_parameter = db.query(Parameter).filter(Parameter.name == name).first()
+    #parameter does not exist, respond with 404
+    if db_parameter is None:
+        raise HTTPException(status_code=404, detail="Parameter not found")
+    #parameter exists, delete it
+    db.delete(db_parameter)
+    db.commit()
+
+
+
+
 
 if __name__ == "__main__":
     import uvicorn
