@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Query, Depends, HTTPException
 from sqlalchemy import create_engine, Column, Integer, String, Numeric, Time, Date, Identity
 from sqlalchemy.orm import sessionmaker, Session
 import sqlalchemy
 from pydantic import BaseModel
+from typing import Annotated
+import datetime
 
 from dmi_etl.DB_operations import *
 
@@ -48,6 +50,25 @@ class ParameterResponse(BaseModel):
     unit: str
     frequency: str
 
+class ReadingCreate(BaseModel):
+    parameter_name: str
+    value: float
+    station_id: str
+    time: datetime.time
+    date: datetime.date
+
+class ReadingResponse(BaseModel):
+    parameter_name: str
+    value: float
+    reading_id: int
+    station_id: str
+    time: datetime.time
+    date: datetime.date
+
+class DateTimeRange(BaseModel):
+    start: datetime.datetime
+    end: datetime.datetime
+
 # GET options for readings
 # parameter or
 # stationId or
@@ -81,6 +102,94 @@ async def read_parameter(name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Parameter not found")
     return db_parameter
 
+
+@app.post("/readings/", response_model=ReadingResponse)
+async def create_reading(reading: ReadingCreate, db: Session = Depends(get_db)):
+    db_reading = Reading(**reading.model_dump())
+    db.add(db_reading)
+    db.commit()
+    db.refresh(db_reading)
+    return db_reading
+
+
+@app.get("/readings/", response_model=ReadingResponse)
+async def read_reading(
+    parameter_name: Annotated[str | None, Query] = None,
+    reading_id: Annotated[int | None, Query] = None,
+    station_id: Annotated[str | None, Query] = None, 
+    datetime_start: Annotated[datetime.datetime | None, Query] = None,
+    datetime_end: Annotated[datetime.datetime | None, Query] = None,    db: Session = Depends(get_db)):
+
+    db_reading = db.query(Reading)
+    if db_reading is None:
+        raise HTTPException(status_code=404, detail="Reading not found")
+
+    if parameter_name != None:
+        db_reading = db_reading.filter(Reading.parameter_name == parameter_name)
+    if reading_id != None:
+        db_reading = db_reading.filter( Reading.reading_id == reading_id)
+    if station_id != None:
+        db_reading = db_reading.filter(Reading.station_id == station_id)
+    if datetime_start != None:
+        db_reading = db_reading.filter(datetime.datetime.combine(Reading.date, Reading.time) >= datetime_start)
+    if datetime_end != None:
+        db_reading = db_reading.filter(datetime.datetime.combine(Reading.date, Reading.time) <= datetime_start)
+    
+    db_reading = db_reading.first()
+
+    if db_reading is None:
+        raise HTTPException(status_code=404, detail="Reading not found")
+    return db_reading
+
+@app.put("/readings/", response_model=ReadingResponse)
+async def update_reading(
+    reading: ReadingCreate,
+    parameter_name: Annotated[str | None, Query] = None,
+    reading_id: Annotated[int | None, Query] = None,
+    station_id: Annotated[str | None, Query] = None, 
+    datetime_start: Annotated[datetime.datetime | None, Query] = None,
+    datetime_end: Annotated[datetime.datetime | None, Query] = None,
+    db: Session = Depends(get_db)):
+
+    db_reading = db.query(Reading)
+    if db_reading is None:
+        raise HTTPException(status_code=404, detail="Reading not found")
+    
+    if parameter_name != None:
+        db_reading = db_reading.filter(Reading.parameter_name == parameter_name)
+    if reading_id != None:
+        db_reading = db_reading.filter(Reading.reading_id == reading_id)
+    if station_id != None:
+        db_reading = db_reading.filter(Reading.station_id == station_id)
+    if datetime_start != None:
+        db_reading = db_reading.filter(datetime.datetime.combine(Reading.date, Reading.time) >= datetime_start)
+    if datetime_end != None:
+        db_reading = db_reading.filter(datetime.datetime.combine(Reading.date, Reading.time) <= datetime_start)
+
+    db_reading = db_reading.first()
+    db_reading.parameter_name = reading.parameter_name
+    db_reading.value = reading.value
+    db_reading.station_id = reading.station_id
+    db_reading.date = reading.date
+    db_reading.time = reading.time
+    #db_reading.filter(Reading.reading_id == reading_id).update({"parameter_name": reading.parameter_name, "value": reading.value, "station_id": reading.station_id, "time": reading.time,"date": reading.date})
+
+    #db.execute(sqlalchemy.update(db_reading, reading))
+
+    db.commit()
+    db.refresh(db_reading)
+    return db_reading
+
+
+@app.delete("/readings/{reading_id}", status_code=204)
+async def delete_reading(reading_id:int, db: Session = Depends(get_db)):
+    db_reading = db.query(Reading).filter(Reading.reading_id == reading_id).first()
+
+    if db_reading is None:
+        raise HTTPException(status_code=404, detail="Reading not found")
+
+    db.delete(db_reading)
+    db.commit()
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
