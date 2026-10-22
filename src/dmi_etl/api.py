@@ -14,7 +14,7 @@ Base = sqlalchemy.orm.declarative_base()
 
 # integrate method from authentication
 #app.post = dmi_etl.api_auth.app.post
-app.include_router(auth_router) 
+app.include_router(auth_router,tags=["authentication"]) 
 
 # CRUD, first defining format of respective database rows/entries, and then the CRUD methods themselves
 class Parameter(Base):
