@@ -53,6 +53,24 @@ class ParameterResponse(BaseModel):
     unit: str
     frequency: str
 
+class StationCreate(BaseModel):
+    station_id : str
+    longitude : float
+    latitude : float
+    location_name : str
+
+class StationUpdate(BaseModel):
+    longitude : float
+    latitude : float
+    location_name : str
+
+
+class StationResponse(BaseModel):
+    station_id : str
+    longitude : float
+    latitude : float
+    location_name : str
+
 # GET options for readings
 # parameter or
 # stationId or
@@ -115,6 +133,35 @@ async def delete_parameter(name:str, db: Session = Depends(get_db)):
     db.delete(db_parameter)
     db.commit()
 
+
+
+@app.post("/stations/", response_model=StationResponse)
+async def create_station(station: StationCreate, db: Session = Depends(get_db)):
+    db_station = Station(**station.model_dump()) #dictionary representation of the model
+    db.add(db_station)
+    db.commit()
+    db.refresh(db_station)
+    return db_station
+
+@app.get("/stations/{station_id}", response_model=StationResponse)
+async def read_station(station_id: str, db: Session = Depends(get_db)):
+    db_station = db.query(Station).filter(Station.station_id == station_id).first()
+    if db_station is None:
+        raise HTTPException(status_code=404, detail="Station not found")
+    return db_station
+
+
+@app.put("/stations/{station_id}", response_model=StationResponse)
+async def update_parameter(station_id: str, stationUpdate:StationUpdate, db: Session = Depends(get_db)):
+    db_station = db.query(Station).filter(Station.station_id == station_id).first()
+    if db_station is None:
+        raise HTTPException(status_code=404, detail="Parameter not found")
+    db_station.longitude = stationUpdate.longitude
+    db_station.latitude = stationUpdate.latitude
+    db_station.location_name = stationUpdate.location_name
+    db.commit()
+    db.refresh(db_station)
+    return db_station
 
 
 
