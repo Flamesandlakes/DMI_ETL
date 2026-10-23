@@ -196,16 +196,6 @@ async def delete_station(station_id:str, db: Session = Depends(get_db)):
     db.commit()
 
 
-
-@app.post("/readings/", response_model=ReadingResponse)
-async def create_reading(reading: ReadingCreate, db: Session = Depends(get_db)):
-    db_reading = Reading(**reading.model_dump())
-    db.add(db_reading)
-    db.commit()
-    db.refresh(db_reading)
-    return db_reading
-
-
 @app.post("/readings/", response_model=list[ReadingResponse])
 async def create_reading(readings: list[ReadingCreate], db: Session = Depends(get_db)):
     for reading in readings:
