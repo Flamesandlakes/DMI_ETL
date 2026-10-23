@@ -21,8 +21,9 @@ users_db = {"tester": {
                         "username": "tester",
                         "role": "testing",
                         "scope": ["me", 
-                                  "parameters_read", "parameters_admin",
-                                  "stations_read"],
+                                  "parameters_admin",
+                                  "stations_admin",
+                                  "readings_admin"],
                         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$PC3/ehfXJ7jLdKmi5+Xy6A$tCR1gVRM/jKOR/V/H79ythjvbHRD9wdnT1AOWrUnniI",
                         "disabled": "False"},
             "testerb": {
@@ -200,10 +201,4 @@ async def read_users_me(current_user: Annotated[User, Security(get_current_activ
 @app.get("/token/me", response_model=TokenData)
 async def read_token(current_user: Annotated[User, Security(get_current_active_user, scopes=["me"])], token: Annotated[str, Depends(oauth2_scheme)]):
     return {"token": token}
-
-
-if __name__ == "__main__":
-    example = "kodeordb"
-    hashed_example = get_password_hash(example)
-    print(hashed_example)
     
