@@ -20,6 +20,8 @@ dependencies = [
     "pydantic>=2.14.1",
     "fastapi>=0.147.0",
     "uvicorn>=0.54.0",
+    "httpx>=0.28.1",
+    "httpx2>=2.16.0",
 ]
 
 [project.scripts]
@@ -32,6 +34,7 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "coverage>=7.16.2",
+    "pytest>=9.1.1",
 ]
 
 [tool.coverage.run]

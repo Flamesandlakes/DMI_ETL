@@ -20,7 +20,7 @@ class Parameter(Base):
     frequency = Column(String)
 
 class Station(Base):
-    __tablename__ = "station_data"
+    __tablename__ = "stations_data"
     __table_args__ = {"schema": "climate"}
     station_id = Column(String, primary_key=True, index=True)
     longitude = Column(Numeric(6,3))
