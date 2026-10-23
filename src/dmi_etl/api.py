@@ -36,7 +36,7 @@ class Parameter(Base):
     frequency = Column(String)
 
 class Station(Base):
-    __tablename__ = "station_data"
+    __tablename__ = "stations_data"
     __table_args__ = {"schema": "climate"}
     station_id = Column(String, primary_key=True, index=True)
     longitude = Column(Numeric(6,3))
@@ -138,7 +138,7 @@ async def create_parameter(current_user: Annotated[User, Security(get_current_ac
 
 @app.get("/parameters/{name}", response_model=ParameterResponse, tags=["metadata"])
 async def read_parameter(current_user: Annotated[User, Security(get_current_active_user, 
-                                                        scopes=["parameters"])],
+                                                        scopes=["read"])],
                          name: str, db: Session = Depends(get_db)):
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first()
     if db_parameter is None:

@@ -20,20 +20,21 @@ SECRET_KEY = "MwVJAU6Yzcn366jCCJlKQX1IYuMqw+jIfHsYpvzw1Qk="
 users_db = {"tester": {
                         "username": "tester",
                         "role": "testing",
-                        "scope": ["me", 
-                                  "admin",
-                                  "parameters", 
-                                  "stations",
-                                  "readings"],
+                        # "scope": ["me", 
+                        #           "admin",
+                        #           "parameters", 
+                        #           "stations",
+                        #           "readings",
+                        #           "read"],
                         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$PC3/ehfXJ7jLdKmi5+Xy6A$tCR1gVRM/jKOR/V/H79ythjvbHRD9wdnT1AOWrUnniI",
                         "disabled": "False"},
             "testerb": {
                         "username": "testerb",
                         "role": "anon",
-                        "scope": ["me",
-                                  "parameters",
-                                  "stations",
-                                  "readings"],
+                        # "scope": ["me",
+                        #           "parameters",
+                        #           "stations",
+                        #           "readings"],
                         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$kKJ/uJJ/tpeRne4s9Ovt7Q$V1/9GlCApFOIjd7tVezYN0/P3nYb+JG0eCljKWktPTk",
                         "disabled": "False"},
             }
@@ -48,6 +49,7 @@ app = APIRouter() #FastAPI()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token",
                                      scopes= {"me": "Read info about the current user.",
+                                              "read": "Read data.",
                                               "admin": "Write, update or delete for any table, you have access to.",
                                               "readings": "Basic access to climate readings, ie. read them",
                                               "stations": "Basic access to station metadata.",
@@ -87,7 +89,7 @@ class User(BaseModel):
 # ... and their password (in the user_db)
 class UserInDB(User):
     hashed_password: str
-    scope: list[str] = []
+    #scope: list[str] = []
 
 
 # from database, retrieve data on user (in db)
