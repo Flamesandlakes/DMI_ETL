@@ -115,7 +115,8 @@ async def read_reading(
     reading_id: Annotated[int | None, Query] = None,
     station_id: Annotated[str | None, Query] = None, 
     date_start: Annotated[datetime.date | None, Query] = None,
-    date_end: Annotated[datetime.date | None, Query] = None,    db: Session = Depends(get_db)):
+    date_end: Annotated[datetime.date | None, Query] = None,    
+    db: Session = Depends(get_db)):
 
     db_reading = db.query(Reading)
     if db_reading is None:
@@ -132,14 +133,11 @@ async def read_reading(
     if date_end != None:
         db_reading = db_reading.filter(Reading.date <= date_end)
 
-    test = db_reading.all()
-
-    db_reading = db_reading.first()
-    
+    db_return = db_reading.all()
     
     if db_reading is None:
         raise HTTPException(status_code=404, detail="Reading not found")
-    return test
+    return db_return
 
 
 @app.put("/readings/", response_model=ReadingResponse)
@@ -175,8 +173,6 @@ async def update_reading(
     db_reading.value = reading.value
     db_reading.date = reading.date
     db_reading.time = reading.time
-
-    #db.execute(sqlalchemy.update(db_reading, reading))
 
     db.commit()
     db.refresh(db_reading)
