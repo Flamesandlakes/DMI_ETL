@@ -2,17 +2,17 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, FastAPI, HTTPException, status, APIRouter
+from fastapi import Depends, FastAPI, HTTPException, status, APIRouter, Security
 from fastapi.security import OAuth2PasswordBearer
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm, SecurityScopes
+from pydantic import BaseModel, ValidationError
 
 from pwdlib import PasswordHash
 from jwt.exceptions import InvalidTokenError
 
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 120
+ACCESS_TOKEN_EXPIRE_MINUTES = 10
 ### STORE ELSEWHERE: FROM HERE ... ####
 SECRET_KEY = "MwVJAU6Yzcn366jCCJlKQX1IYuMqw+jIfHsYpvzw1Qk="
 
@@ -20,13 +20,15 @@ SECRET_KEY = "MwVJAU6Yzcn366jCCJlKQX1IYuMqw+jIfHsYpvzw1Qk="
 users_db = {"tester": {
                         "username": "tester",
                         "role": "testing",
+                        "scope": ["read", "write"],
                         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$PC3/ehfXJ7jLdKmi5+Xy6A$tCR1gVRM/jKOR/V/H79ythjvbHRD9wdnT1AOWrUnniI",
                         "disabled": "False"},
             "testerb": {
                         "username": "testerb",
-                        "role": "testing",
+                        "role": "anon",
+                        "scope": ["read"],
                         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$kKJ/uJJ/tpeRne4s9Ovt7Q$V1/9GlCApFOIjd7tVezYN0/P3nYb+JG0eCljKWktPTk",
-                        "disabled": "True"},
+                        "disabled": "False"},
             }
 ### ... TO HERE ####
 
@@ -37,14 +39,21 @@ DUMMY_HASH = password_hash.hash("dummypassword")
 # define app (later given methods)
 app = APIRouter() #FastAPI()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token",
+                                     scopes = {"me": "Read information about the current user.",
+                                               "readings_read": "Read climate readings.",
+                                               "readings_admin": "Read, write, update or delete climate readings.",
+                                               "station_read": "Read station metadata.",
+                                               "station_admin": "Read, write, update or delete station metadata.",
+                                               "parameters_read": "Read parameter metadata.",
+                                               "parameters_admin": "Read, write, update or delete parameter metadata."})
 
 # verify that plain matched stored hashed version
-def verify_password(plain_password, hashed_password):
+def verify_password(plain_password, hashed_password) -> bool:
     return password_hash.verify(plain_password, hashed_password)
 
 
-def get_password_hash(password):
+def get_password_hash(password) -> str:
     return password_hash.hash(password)
 
 ## Token class
@@ -55,6 +64,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
+    scopes: list[str] = []
 
 ## User class
 class User(BaseModel):
@@ -65,15 +75,16 @@ class User(BaseModel):
 # ... and their password (in the user_db)
 class UserInDB(User):
     hashed_password: str
+    scope: list[str] = []
 
 
 # from database, retrieve data on user (in db)
-def get_user(db, username: str):
+def get_user(db, username: str) -> UserInDB:
     if username in db:
         user_dict = db[username]
         return UserInDB(**user_dict)
 
-def authenticate_user(users_db, username: str, password: str):
+def authenticate_user(users_db, username: str, password: str) -> dict | bool:
     user = get_user(users_db, username)
     if not user:
         verify_password(password, DUMMY_HASH)
@@ -81,6 +92,30 @@ def authenticate_user(users_db, username: str, password: str):
     if not verify_password(password, user.hashed_password):
         return False
     return user
+
+##
+# from typing import Callable
+
+
+# def require_role(required_role: str) -> Callable:
+#     def role_checker(user: dict = Depends(authenticate_user)) -> dict:
+#         if user["role"] != required_role:
+#             raise HTTPException(
+#                 status_code=status.HTTP_403_FORBIDDEN,
+#                 detail="Insufficient permissions",
+#             )
+#         return user
+#     return role_checker
+
+
+def check_authorization(client, scope):
+    if scope in client.scope:
+        return True
+    else:
+        raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Insufficient permissions",
+                    )
 
 ## create a temporary access token. Used to verify user without needing repeated logins
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -94,8 +129,13 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    credentials_exception = HTTPException(
+async def get_current_user(security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_scheme)]):
+    
+    if security_scopes.scopes:
+        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+    else:
+        authenticate_value = "Bearer"
+        credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
@@ -105,12 +145,23 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         username = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        scope: str = payload.get("scope", "")
+        token_scopes = scope.split(" ")
+        token_data = TokenData(scopes=token_scopes,username=username)
+        
     except InvalidTokenError:
         raise credentials_exception
     user = get_user(users_db, username=token_data.username)
     if user is None:
         raise credentials_exception
+    
+    for scope in security_scopes.scopes:
+        if scope not in token_data.scopes:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough permissions",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
     return user
 
 
@@ -127,25 +178,23 @@ async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
     user = authenticate_user(users_db, form_data.username, form_data.password)
+    
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
 
-@app.get("/users/me")
+@app.get("/users/me", response_model=User)
 async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
     return current_user
 
-# @app.get("/items/")
-# async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
-#     return {"token": token}
+@app.get("/token/me")
+async def read_token(token: Annotated[str, Depends(oauth2_scheme)]):
+    return {"token": token}
 
 
 if __name__ == "__main__":

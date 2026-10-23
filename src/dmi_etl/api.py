@@ -1,9 +1,11 @@
+from typing import Annotated
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy import create_engine, Column, Integer, String, Numeric, Time, Date, Identity
 from sqlalchemy.orm import sessionmaker, Session
 import sqlalchemy
 from pydantic import BaseModel
 from dmi_etl.api_auth import app as auth_router
+from dmi_etl.api_auth import User, UserInDB, Token, TokenData, get_current_active_user, authenticate_user, check_authorization
 
 from dmi_etl.DB_operations import *
 
@@ -95,7 +97,9 @@ def get_db():
         db.close()
 
 @app.post("/parameters/", response_model=ParameterResponse)
-async def create_parameter(parameter: ParameterCreate, db: Session = Depends(get_db)):
+async def create_parameter(user: Annotated[User, Depends(get_current_active_user)], parameter: ParameterCreate, db: Session = Depends(get_db)):
+    if not check_authorization(user, "write"):
+        return
     db_parameter = Parameter(**parameter.model_dump()) #dictionary representation of the model
     db.add(db_parameter)
     db.commit()
@@ -103,7 +107,9 @@ async def create_parameter(parameter: ParameterCreate, db: Session = Depends(get
     return db_parameter
 
 @app.get("/parameters/{name}", response_model=ParameterResponse)
-async def read_parameter(name: str, db: Session = Depends(get_db)):
+async def read_parameter(user: Annotated[User, Depends(get_current_active_user)], name: str, db: Session = Depends(get_db)):
+    if not check_authorization(user, "read"):
+            return
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first()
     if db_parameter is None:
         raise HTTPException(status_code=404, detail="Parameter not found")
