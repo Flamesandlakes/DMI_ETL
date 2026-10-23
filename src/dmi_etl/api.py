@@ -155,7 +155,7 @@ async def read_station(station_id: str, db: Session = Depends(get_db)):
 async def update_parameter(station_id: str, stationUpdate:StationUpdate, db: Session = Depends(get_db)):
     db_station = db.query(Station).filter(Station.station_id == station_id).first()
     if db_station is None:
-        raise HTTPException(status_code=404, detail="Parameter not found")
+        raise HTTPException(status_code=404, detail="Station not found")
     db_station.longitude = stationUpdate.longitude
     db_station.latitude = stationUpdate.latitude
     db_station.location_name = stationUpdate.location_name
@@ -163,6 +163,16 @@ async def update_parameter(station_id: str, stationUpdate:StationUpdate, db: Ses
     db.refresh(db_station)
     return db_station
 
+
+@app.delete("/stations/{station_id}", status_code=204)
+async def delete_station(station_id:str, db: Session = Depends(get_db)):
+    db_station = db.query(Station).filter(Station.station_id == station_id).first()
+    #parameter does not exist, respond with 404
+    if db_station is None:
+        raise HTTPException(status_code=404, detail="Station not found")
+    #parameter exists, delete it
+    db.delete(db_station)
+    db.commit()
 
 
 
