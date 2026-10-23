@@ -20,13 +20,18 @@ SECRET_KEY = "MwVJAU6Yzcn366jCCJlKQX1IYuMqw+jIfHsYpvzw1Qk="
 users_db = {"tester": {
                         "username": "tester",
                         "role": "testing",
-                        "scope": ["read", "write"],
+                        "scope": ["me", 
+                                  "parameters_read", "parameters_admin",
+                                  "stations_read"],
                         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$PC3/ehfXJ7jLdKmi5+Xy6A$tCR1gVRM/jKOR/V/H79ythjvbHRD9wdnT1AOWrUnniI",
                         "disabled": "False"},
             "testerb": {
                         "username": "testerb",
                         "role": "anon",
-                        "scope": ["read"],
+                        "scope": ["me",
+                                  "parameters_read",
+                                  "stations_read",
+                                  "readings_read"],
                         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$kKJ/uJJ/tpeRne4s9Ovt7Q$V1/9GlCApFOIjd7tVezYN0/P3nYb+JG0eCljKWktPTk",
                         "disabled": "False"},
             }
@@ -43,8 +48,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token",
                                      scopes = {"me": "Read information about the current user.",
                                                "readings_read": "Read climate readings.",
                                                "readings_admin": "Read, write, update or delete climate readings.",
-                                               "station_read": "Read station metadata.",
-                                               "station_admin": "Read, write, update or delete station metadata.",
+                                               "stations_read": "Read station metadata.",
+                                               "stations_admin": "Read, write, update or delete station metadata.",
                                                "parameters_read": "Read parameter metadata.",
                                                "parameters_admin": "Read, write, update or delete parameter metadata."})
 
@@ -189,11 +194,11 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 @app.get("/users/me", response_model=User)
-async def read_users_me(current_user: Annotated[User, Depends(get_current_active_user)]):
+async def read_users_me(current_user: Annotated[User, Security(get_current_active_user, scopes=["me"])]):
     return current_user
 
-@app.get("/token/me")
-async def read_token(token: Annotated[str, Depends(oauth2_scheme)]):
+@app.get("/token/me", response_model=TokenData)
+async def read_token(current_user: Annotated[User, Security(get_current_active_user, scopes=["me"])], token: Annotated[str, Depends(oauth2_scheme)]):
     return {"token": token}
 
 

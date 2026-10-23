@@ -1,11 +1,11 @@
 from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Security
 from sqlalchemy import create_engine, Column, Integer, String, Numeric, Time, Date, Identity
 from sqlalchemy.orm import sessionmaker, Session
 import sqlalchemy
 from pydantic import BaseModel
 from dmi_etl.api_auth import app as auth_router
-from dmi_etl.api_auth import User, UserInDB, Token, TokenData, get_current_active_user, authenticate_user, check_authorization
+from dmi_etl.api_auth import User, get_current_active_user
 
 from dmi_etl.DB_operations import *
 
@@ -97,9 +97,9 @@ def get_db():
         db.close()
 
 @app.post("/parameters/", response_model=ParameterResponse)
-async def create_parameter(user: Annotated[User, Depends(get_current_active_user)], parameter: ParameterCreate, db: Session = Depends(get_db)):
-    if not check_authorization(user, "write"):
-        return
+async def create_parameter(current_user: Annotated[User, Security(get_current_active_user, scopes=["parameters_admin"])], parameter: ParameterCreate, db: Session = Depends(get_db)):
+    # if not check_authorization(user, "write"):
+    #     return
     db_parameter = Parameter(**parameter.model_dump()) #dictionary representation of the model
     db.add(db_parameter)
     db.commit()
@@ -107,9 +107,8 @@ async def create_parameter(user: Annotated[User, Depends(get_current_active_user
     return db_parameter
 
 @app.get("/parameters/{name}", response_model=ParameterResponse)
-async def read_parameter(user: Annotated[User, Depends(get_current_active_user)], name: str, db: Session = Depends(get_db)):
-    if not check_authorization(user, "read"):
-            return
+async def read_parameter(current_user: Annotated[User, Security(get_current_active_user, scopes=["parameters_read", "parameters_admin"])],
+                         name: str, db: Session = Depends(get_db)):
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first()
     if db_parameter is None:
         raise HTTPException(status_code=404, detail="Parameter not found")
@@ -120,7 +119,8 @@ async def read_parameter(user: Annotated[User, Depends(get_current_active_user)]
 #if parameter does not exist, respond  with 404
 #the response is the updated parameter
 @app.put("/parameters/{name}", response_model=ParameterResponse) #fetch the name from the url
-async def update_parameter(name: str, paramUpdate:ParameterUpdate, db: Session = Depends(get_db)):
+async def update_parameter(current_user: Annotated[User, Security(get_current_active_user, scopes=["parameters_admin"])],
+                           name: str, paramUpdate:ParameterUpdate, db: Session = Depends(get_db)):
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first() #from the db, get the row with the name from the url.
     #parameter does not exist, respond with 404
     if db_parameter is None:
@@ -135,7 +135,8 @@ async def update_parameter(name: str, paramUpdate:ParameterUpdate, db: Session =
 
 
 @app.delete("/parameters/{name}", status_code=204)
-async def delete_parameter(name:str, db: Session = Depends(get_db)):
+async def delete_parameter(current_user: Annotated[User, Security(get_current_active_user, scopes=["parameters_admin"])],
+                            name:str, db: Session = Depends(get_db)):
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first()
     #parameter does not exist, respond with 404
     if db_parameter is None:
@@ -147,7 +148,9 @@ async def delete_parameter(name:str, db: Session = Depends(get_db)):
 
 
 @app.post("/stations/", response_model=StationResponse)
-async def create_station(station: StationCreate, db: Session = Depends(get_db)):
+async def create_station(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=["stations_admin"])],
+                         station: StationCreate, db: Session = Depends(get_db)):
     db_station = Station(**station.model_dump()) #dictionary representation of the model
     db.add(db_station)
     db.commit()
@@ -155,7 +158,9 @@ async def create_station(station: StationCreate, db: Session = Depends(get_db)):
     return db_station
 
 @app.get("/stations/{station_id}", response_model=StationResponse)
-async def read_station(station_id: str, db: Session = Depends(get_db)):
+async def read_station(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=["stations_read","stations_admin"])],
+                        station_id: str, db: Session = Depends(get_db)):
     db_station = db.query(Station).filter(Station.station_id == station_id).first()
     if db_station is None:
         raise HTTPException(status_code=404, detail="Station not found")
@@ -163,7 +168,9 @@ async def read_station(station_id: str, db: Session = Depends(get_db)):
 
 
 @app.put("/stations/{station_id}", response_model=StationResponse)
-async def update_parameter(station_id: str, stationUpdate:StationUpdate, db: Session = Depends(get_db)):
+async def update_parameter(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=["stations_admin"])],
+                            station_id: str, stationUpdate:StationUpdate, db: Session = Depends(get_db)):
     db_station = db.query(Station).filter(Station.station_id == station_id).first()
     if db_station is None:
         raise HTTPException(status_code=404, detail="Station not found")
@@ -176,7 +183,9 @@ async def update_parameter(station_id: str, stationUpdate:StationUpdate, db: Ses
 
 
 @app.delete("/stations/{station_id}", status_code=204)
-async def delete_station(station_id:str, db: Session = Depends(get_db)):
+async def delete_station(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=["stations_admin"])],
+                            station_id:str, db: Session = Depends(get_db)):
     db_station = db.query(Station).filter(Station.station_id == station_id).first()
     #parameter does not exist, respond with 404
     if db_station is None:
