@@ -65,9 +65,6 @@ class ReadingResponse(BaseModel):
     time: datetime.time
     date: datetime.date
 
-class DateTimeRange(BaseModel):
-    start: datetime.datetime
-    end: datetime.datetime
 
 # GET options for readings
 # parameter or
@@ -112,13 +109,13 @@ async def create_reading(reading: ReadingCreate, db: Session = Depends(get_db)):
     return db_reading
 
 
-@app.get("/readings/", response_model=ReadingResponse)
+@app.get("/readings/", response_model=list[ReadingResponse])
 async def read_reading(
     parameter_name: Annotated[str | None, Query] = None,
     reading_id: Annotated[int | None, Query] = None,
     station_id: Annotated[str | None, Query] = None, 
-    datetime_start: Annotated[datetime.datetime | None, Query] = None,
-    datetime_end: Annotated[datetime.datetime | None, Query] = None,    db: Session = Depends(get_db)):
+    date_start: Annotated[datetime.date | None, Query] = None,
+    date_end: Annotated[datetime.date | None, Query] = None,    db: Session = Depends(get_db)):
 
     db_reading = db.query(Reading)
     if db_reading is None:
@@ -130,16 +127,20 @@ async def read_reading(
         db_reading = db_reading.filter( Reading.reading_id == reading_id)
     if station_id != None:
         db_reading = db_reading.filter(Reading.station_id == station_id)
-    if datetime_start != None:
-        db_reading = db_reading.filter(datetime.datetime.combine(Reading.date, Reading.time) >= datetime_start)
-    if datetime_end != None:
-        db_reading = db_reading.filter(datetime.datetime.combine(Reading.date, Reading.time) <= datetime_start)
-    
-    db_reading = db_reading.first()
+    if date_start != None:
+        db_reading = db_reading.filter(Reading.date >= date_start)
+    if date_end != None:
+        db_reading = db_reading.filter(Reading.date <= date_end)
 
+    test = db_reading.all()
+
+    db_reading = db_reading.first()
+    
+    
     if db_reading is None:
         raise HTTPException(status_code=404, detail="Reading not found")
-    return db_reading
+    return test
+
 
 @app.put("/readings/", response_model=ReadingResponse)
 async def update_reading(
@@ -147,8 +148,8 @@ async def update_reading(
     parameter_name: Annotated[str | None, Query] = None,
     reading_id: Annotated[int | None, Query] = None,
     station_id: Annotated[str | None, Query] = None, 
-    datetime_start: Annotated[datetime.datetime | None, Query] = None,
-    datetime_end: Annotated[datetime.datetime | None, Query] = None,
+    date_start: Annotated[datetime.date | None, Query] = None,
+    date_end: Annotated[datetime.date | None, Query] = None,
     db: Session = Depends(get_db)):
 
     db_reading = db.query(Reading)
@@ -161,18 +162,19 @@ async def update_reading(
         db_reading = db_reading.filter(Reading.reading_id == reading_id)
     if station_id != None:
         db_reading = db_reading.filter(Reading.station_id == station_id)
-    if datetime_start != None:
-        db_reading = db_reading.filter(datetime.datetime.combine(Reading.date, Reading.time) >= datetime_start)
-    if datetime_end != None:
-        db_reading = db_reading.filter(datetime.datetime.combine(Reading.date, Reading.time) <= datetime_start)
-
+    if date_start != None:
+        db_reading = db_reading.filter(Reading.date >= date_start)
+    if date_end != None:
+        db_reading = db_reading.filter(Reading.date <= date_end)
+    
+    if db_reading is None:
+            raise HTTPException(status_code=404, detail="Reading not found")
+    
     db_reading = db_reading.first()
     db_reading.parameter_name = reading.parameter_name
     db_reading.value = reading.value
-    db_reading.station_id = reading.station_id
     db_reading.date = reading.date
     db_reading.time = reading.time
-    #db_reading.filter(Reading.reading_id == reading_id).update({"parameter_name": reading.parameter_name, "value": reading.value, "station_id": reading.station_id, "time": reading.time,"date": reading.date})
 
     #db.execute(sqlalchemy.update(db_reading, reading))
 
@@ -190,6 +192,8 @@ async def delete_reading(reading_id:int, db: Session = Depends(get_db)):
 
     db.delete(db_reading)
     db.commit()
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
