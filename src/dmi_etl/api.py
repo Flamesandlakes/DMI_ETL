@@ -116,7 +116,7 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/parameters/", response_model=ParameterResponse)
+@app.post("/parameters/", response_model=ParameterResponse, tags=["Metadata"])
 async def create_parameter(current_user: Annotated[User, Security(get_current_active_user, scopes=["parameters_admin"])], parameter: ParameterCreate, db: Session = Depends(get_db)):
     # if not check_authorization(user, "write"):
     #     return
@@ -126,7 +126,7 @@ async def create_parameter(current_user: Annotated[User, Security(get_current_ac
     db.refresh(db_parameter)
     return db_parameter
 
-@app.get("/parameters/{name}", response_model=ParameterResponse)
+@app.get("/parameters/{name}", response_model=ParameterResponse, tags=["Metadata"])
 async def read_parameter(current_user: Annotated[User, Security(get_current_active_user, scopes=["parameters_read", "parameters_admin"])],
                          name: str, db: Session = Depends(get_db)):
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first()
@@ -138,7 +138,7 @@ async def read_parameter(current_user: Annotated[User, Security(get_current_acti
 #if the parameter exists, it will be overwritten
 #if parameter does not exist, respond  with 404
 #the response is the updated parameter
-@app.put("/parameters/{name}", response_model=ParameterResponse) #fetch the name from the url
+@app.put("/parameters/{name}", response_model=ParameterResponse, tags=["Metadata"]) #fetch the name from the url
 async def update_parameter(current_user: Annotated[User, Security(get_current_active_user, scopes=["parameters_admin"])],
                            name: str, paramUpdate:ParameterUpdate, db: Session = Depends(get_db)):
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first() #from the db, get the row with the name from the url.
@@ -154,7 +154,7 @@ async def update_parameter(current_user: Annotated[User, Security(get_current_ac
     return db_parameter
 
 
-@app.delete("/parameters/{name}", status_code=204)
+@app.delete("/parameters/{name}", status_code=204, tags=["Metadata"])
 async def delete_parameter(current_user: Annotated[User, Security(get_current_active_user, scopes=["parameters_admin"])],
                             name:str, db: Session = Depends(get_db)):
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first()
@@ -167,7 +167,7 @@ async def delete_parameter(current_user: Annotated[User, Security(get_current_ac
 
 
 
-@app.post("/stations/", response_model=StationResponse)
+@app.post("/stations/", response_model=StationResponse, tags=["Metadata"])
 async def create_station(current_user: Annotated[User, Security(get_current_active_user, 
                                                 scopes=["stations_admin"])],
                          station: StationCreate, db: Session = Depends(get_db)):
@@ -177,7 +177,7 @@ async def create_station(current_user: Annotated[User, Security(get_current_acti
     db.refresh(db_station)
     return db_station
 
-@app.get("/stations/{station_id}", response_model=StationResponse)
+@app.get("/stations/{station_id}", response_model=StationResponse, tags=["Metadata"])
 async def read_station(current_user: Annotated[User, Security(get_current_active_user, 
                                                 scopes=["stations_read","stations_admin"])],
                         station_id: str, db: Session = Depends(get_db)):
@@ -187,7 +187,7 @@ async def read_station(current_user: Annotated[User, Security(get_current_active
     return db_station
 
 
-@app.put("/stations/{station_id}", response_model=StationResponse)
+@app.put("/stations/{station_id}", response_model=StationResponse, tags=["Metadata"])
 async def update_parameter(current_user: Annotated[User, Security(get_current_active_user, 
                                                 scopes=["stations_admin"])],
                             station_id: str, stationUpdate:StationUpdate, db: Session = Depends(get_db)):
@@ -202,7 +202,7 @@ async def update_parameter(current_user: Annotated[User, Security(get_current_ac
     return db_station
 
 
-@app.delete("/stations/{station_id}", status_code=204)
+@app.delete("/stations/{station_id}", status_code=204, tags=["Metadata"])
 async def delete_station(current_user: Annotated[User, Security(get_current_active_user, 
                                                 scopes=["stations_admin"])],
                             station_id:str, db: Session = Depends(get_db)):
@@ -215,7 +215,7 @@ async def delete_station(current_user: Annotated[User, Security(get_current_acti
     db.commit()
 
 
-@app.post("/readings/", response_model=list[ReadingResponse])
+@app.post("/readings/", response_model=list[ReadingResponse], tags=["Climate Readings"])
 async def create_reading(readings: list[ReadingCreate], db: Session = Depends(get_db)):
     for reading in readings:
         db_reading = Reading(**reading.model_dump())
@@ -225,7 +225,7 @@ async def create_reading(readings: list[ReadingCreate], db: Session = Depends(ge
     return db_reading
 
 
-@app.get("/readings/", response_model=list[ReadingResponse])
+@app.get("/readings/", response_model=list[ReadingResponse], tags=["Climate Readings"])
 async def read_reading(
     parameter_name: Annotated[str | None, Query] = None,
     reading_id: Annotated[int | None, Query] = None,
@@ -256,7 +256,7 @@ async def read_reading(
     return db_return
 
 
-@app.put("/readings/", response_model=ReadingResponse)
+@app.put("/readings/", response_model=ReadingResponse, tags=["Climate Readings"])
 async def update_reading(
     reading: ReadingCreate,
     parameter_name: Annotated[str | None, Query] = None,
@@ -295,7 +295,7 @@ async def update_reading(
     return db_reading
 
 
-@app.delete("/readings/{reading_id}", status_code=204)
+@app.delete("/readings/{reading_id}", status_code=204, tags=["Climate Readings"])
 async def delete_reading(reading_id:int, db: Session = Depends(get_db)):
     db_reading = db.query(Reading).filter(Reading.reading_id == reading_id).first()
 
