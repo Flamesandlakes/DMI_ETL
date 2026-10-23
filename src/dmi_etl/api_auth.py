@@ -21,18 +21,19 @@ users_db = {"tester": {
                         "username": "tester",
                         "role": "testing",
                         "scope": ["me", 
-                                  "parameters_admin",
-                                  "stations_admin",
-                                  "readings_admin"],
+                                  "admin",
+                                  "parameters", 
+                                  "stations",
+                                  "readings"],
                         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$PC3/ehfXJ7jLdKmi5+Xy6A$tCR1gVRM/jKOR/V/H79ythjvbHRD9wdnT1AOWrUnniI",
                         "disabled": "False"},
             "testerb": {
                         "username": "testerb",
                         "role": "anon",
                         "scope": ["me",
-                                  "parameters_read",
-                                  "stations_read",
-                                  "readings_read"],
+                                  "parameters",
+                                  "stations",
+                                  "readings"],
                         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$kKJ/uJJ/tpeRne4s9Ovt7Q$V1/9GlCApFOIjd7tVezYN0/P3nYb+JG0eCljKWktPTk",
                         "disabled": "False"},
             }
@@ -46,13 +47,18 @@ DUMMY_HASH = password_hash.hash("dummypassword")
 app = APIRouter() #FastAPI()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token",
-                                     scopes = {"me": "Read information about the current user.",
-                                               "readings_read": "Read climate readings.",
-                                               "readings_admin": "Read, write, update or delete climate readings.",
-                                               "stations_read": "Read station metadata.",
-                                               "stations_admin": "Read, write, update or delete station metadata.",
-                                               "parameters_read": "Read parameter metadata.",
-                                               "parameters_admin": "Read, write, update or delete parameter metadata."})
+                                     scopes= {"me": "Read info about the current user.",
+                                              "admin": "Write, update or delete for any table, you have access to.",
+                                              "readings": "Basic access to climate readings, ie. read them",
+                                              "stations": "Basic access to station metadata.",
+                                              "parameters": "Basic access to parameter metadata."})
+                                    #  scopes = {"me": "Read information about the current user.",
+                                    #            "readings_read": "Read climate readings.",
+                                    #            "readings_admin": "Read, write, update or delete climate readings.",
+                                    #            "stations_read": "Read station metadata.",
+                                    #            "stations_admin": "Read, write, update or delete station metadata.",
+                                    #            "parameters_read": "Read parameter metadata.",
+                                    #            "parameters_admin": "Read, write, update or delete parameter metadata."})
 
 # verify that plain matched stored hashed version
 def verify_password(plain_password, hashed_password) -> bool:
