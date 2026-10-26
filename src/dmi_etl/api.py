@@ -22,7 +22,7 @@ class Parameter(Base):
     frequency = Column(String)
 
 class Station(Base):
-    __tablename__ = "station_data"
+    __tablename__ = "stations_data"
     __table_args__ = {"schema": "climate"}
     station_id = Column(String, primary_key=True, index=True)
     longitude = Column(Numeric(6,3))
@@ -198,17 +198,32 @@ async def delete_station(station_id:str, db: Session = Depends(get_db)):
 
 @app.post("/readings/", response_model=list[ReadingResponse])
 async def create_reading(readings: list[ReadingCreate], db: Session = Depends(get_db)):
+    db_list =[]
+    db_readings = db.query(Reading)
     for reading in readings:
-        if db.query(Station).filter(Station.station_id == reading.station_id) == None:
-            raise HTTPException(status_code=422, detail="Given station id does not exists in station database")
-        if db.query(Parameter).filter(Parameter.name == reading.parameter_name) == None:
-            raise HTTPException(status_code=422, detail="Given parameter name does not exists in station database")
+        if db.query(Station).filter(Station.station_id == reading.station_id).first() == None:
+            raise HTTPException(status_code=422, detail="Given station id does not exists in station database. Consider looking up available stations ")
+        
+        if db.query(Parameter).filter(Parameter.name == reading.parameter_name).first() == None:
+            raise HTTPException(status_code=422, detail="Given parameter name does not exists in station database. Consider looking up available parameters")
+        
+        search_identical = db_readings.filter_by(
+            parameter_name=reading.parameter_name,
+            station_id=reading.station_id,
+            date=reading.date,
+            time=reading.time).first()
 
+        
+        if search_identical != None:
+            raise HTTPException(status_code=422, detail="Unique entry already exists. Consider using update instead.")
+
+        
         db_reading = Reading(**reading.model_dump())
         db.add(db_reading)
+        db_list.append(db_reading)
     db.commit()
     db.refresh(db_reading)
-    return db_reading
+    return db_list
 
 
 @app.get("/readings/", response_model=list[ReadingResponse])
