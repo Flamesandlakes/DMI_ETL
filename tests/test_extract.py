@@ -1,7 +1,7 @@
 import unittest
 from dmi_etl.extract import *
-from unittest.mock import patch
-
+from dmi_etl.utility import Credentials
+from unittest.mock import patch, MagicMock
 class Test_get_data(unittest.TestCase):
     @patch("dmi_etl.extract.requests.get")
     def test_forsoeg(self, mock_get):
@@ -56,6 +56,34 @@ class Test_get_station_data(unittest.TestCase):
         resultat = get_station_data(["06188"])
 
         self.assertEqual(resultat, [mock_data])
+
+class Test_get_data_from_api_with_credentials(unittest.TestCase):
+    @patch("dmi_etl.extract.requests.get")
+    def test_get_data_from_api(self, mock_get):
+        mock_data = {'observationId': '9c6a6723-f8cf-4a12-b165-a854e2bd065e', 
+                     'nodeId': '2c47284d-777b-44f0-bdeb-3d442f6a31b1', 
+                     'instrumentId': 'BME280:75E99D2B', 
+                     'instrumentModel': 'BME280', 
+                     'sensor': 'temperature', 
+                     'readingId': '818c1516-4c56-402c-9617-52d7759b0532', 
+                     'value': 22.98187255859375, 
+                     'timestamp': '2026-10-26T11:47:46.900728Z'}
+                
+
+        base_url = "https://findesikke.dk/api/v1/obs"
+
+        mock_get.return_value.json.return_value = mock_data
+
+        try:
+            cred = Credentials()
+        except Exception as _:
+            cred = MagicMock()
+        cred.spac_api_id = "someId"
+        cred.spac_api_key= "someKey"
+
+        resultat = get_data_from_api_with_credentials(base_url, {}, cred)
+        #print(resultat)
+        self.assertEqual(resultat, mock_data)
 
 class Test_rate_constraint(unittest.TestCase):
 

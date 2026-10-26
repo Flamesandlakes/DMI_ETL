@@ -52,7 +52,7 @@ def get_data_from_api_with_credentials(base_url: str, parameters: dict,
     # Note: Assumes that the api_token string contains both the id and the secret key (seperated by a colon)
     headers = {"Authorization": f"Bearer {api_credentials.spac_api_id+":"+api_credentials.spac_api_key}"}
     response = requests.get(url = base_url,
-                            params=parameters if parameters else {},
+                            params=parameters,
                             headers = headers
                             )
     data = response.json()
