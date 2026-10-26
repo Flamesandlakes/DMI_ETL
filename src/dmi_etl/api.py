@@ -344,4 +344,10 @@ async def delete_reading(current_user: Annotated[User, Security(get_current_acti
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    import socket
+    hostname = socket.gethostname()
+    IPAddr = socket.gethostbyname(hostname)
+    uvicorn.run(app, host=IPAddr, port=8000)
+
+# uv run uvicorn dmi_etl.api:app --host xxx.xxx.xxx.xx --port 8000
+# where xxx.xxx.xxx.xx is the IPv4 address
