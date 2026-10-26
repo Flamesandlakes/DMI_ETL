@@ -9,7 +9,7 @@ import datetime
 ### Dictionaries for API options and parameters ###
 API_options = {"DMI readings": "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items",
                #"DMI stations": "https://opendataapi.dmi.dk/v2/metObs/collections/station/items",
-               "SPAC readings": None
+               "SPAC readings": "https://herodot.spac.dk/api/v1/observations"
                }
 
 API_parameters = {"DMI readings": ["temp_mean_past1h", "wind_speed_past1h", 
@@ -18,7 +18,7 @@ API_parameters = {"DMI readings": ["temp_mean_past1h", "wind_speed_past1h",
                                    "Københavns Lufthavn", "Roskilde Lufthavn", "Holbæk Flyveplads", 
                                    "Tessebølle",
                                    "Gedser"],
-                  "SPAC readings": [None, None, None, None, None, None],
+                  "SPAC readings": ["all"],
                   "SPAC stations": ["Ballerup"]}
 
 station_name_to_id = {"Sjælsmark": "06188", 
@@ -202,7 +202,23 @@ class UserInterface(ErrorLogger):
         parameter_options.sort()
         self.parameter_choice.delete(0, tk.END)
         self.parameter_choice.insert(tk.END, *parameter_options)
+        self.update_widgets(selected_api)
 
+    def update_widgets(self, selected_api):
+        option_widgets = [self.parameter_choice,
+                    self.start_date,
+                    self.start_time,
+                    self.end_date,
+                    self.end_time,
+                    self.bbox_entry,
+                    self.limit_entry]
+        if selected_api == "DMI readings":
+            for w in option_widgets:
+                w.grid()
+        else:
+            for w in option_widgets:
+                w.grid_forget()
+            
 
     def get_selected_timeperiod(self) -> str:
         start_date_value = self.start_date.get_date()

@@ -55,13 +55,16 @@ def get_data_from_api_with_credentials(base_url: str, parameters: dict,
                             params=parameters,
                             headers = headers
                             )
-    data = response.json()
+    try:
+        data = response.json()
+    except requests.exceptions.JSONDecodeError:
+        data = response.content
     return data
 
 
 if __name__ == "__main__":
     cred = Credentials()
-    #parameters = {"sensor":"humidity"}
+    #parameters = {"Sensor":"humidity"}
     data = get_data_from_api_with_credentials("https://herodot.spac.dk/api/v1/observations", 
                                               {}, 
                                               api_credentials=cred)
