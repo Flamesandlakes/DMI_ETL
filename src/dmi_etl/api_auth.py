@@ -20,7 +20,7 @@ SECRET_KEY = "MwVJAU6Yzcn366jCCJlKQX1IYuMqw+jIfHsYpvzw1Qk="
 users_db = {"tester": {
                         "username": "tester",
                         "role": "testing",
-                        "scope": ["me", 
+                        "access": ["me", 
                                   "parameters_admin",
                                   "stations_admin",
                                   "readings_admin"],
@@ -29,7 +29,7 @@ users_db = {"tester": {
             "testerb": {
                         "username": "testerb",
                         "role": "anon",
-                        "scope": ["me",
+                        "access": ["me",
                                   "parameters_read",
                                   "stations_read",
                                   "readings_read"],
@@ -46,13 +46,14 @@ DUMMY_HASH = password_hash.hash("dummypassword")
 app = APIRouter() #FastAPI()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token",
-                                     scopes = {"me": "Read information about the current user.",
-                                               "readings_read": "Read climate readings.",
-                                               "readings_admin": "Read, write, update or delete climate readings.",
-                                               "stations_read": "Read station metadata.",
-                                               "stations_admin": "Read, write, update or delete station metadata.",
-                                               "parameters_read": "Read parameter metadata.",
-                                               "parameters_admin": "Read, write, update or delete parameter metadata."})
+                                    #  scopes = {"me": "Read information about the current user.",
+                                    #            "readings_read": "Read climate readings.",
+                                    #            "readings_admin": "Read, write, update or delete climate readings.",
+                                    #            "stations_read": "Read station metadata.",
+                                    #            "stations_admin": "Read, write, update or delete station metadata.",
+                                    #            "parameters_read": "Read parameter metadata.",
+                                    #            "parameters_admin": "Read, write, update or delete parameter metadata."}
+                                     )
 
 # verify that plain matched stored hashed version
 def verify_password(plain_password, hashed_password) -> bool:
@@ -70,7 +71,7 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
-    scopes: list[str] = []
+    access: list[str] = []
 
 ## User class
 class User(BaseModel):
@@ -81,7 +82,7 @@ class User(BaseModel):
 # ... and their password (in the user_db)
 class UserInDB(User):
     hashed_password: str
-    scope: list[str] = []
+    access: list[str] = []
 
 
 # from database, retrieve data on user (in db)
@@ -114,8 +115,18 @@ def authenticate_user(users_db, username: str, password: str) -> dict | bool:
 #     return role_checker
 
 
-def check_authorization(client, scope):
-    if scope in client.scope:
+def check_authorization(client, any_of_perm:list | str):
+    '''
+    Check whether client fulfill any of the prerequisite access requirements.
+    '''
+    if isinstance(any_of_perm, str):
+        any_of_perm = [any_of_perm]
+        
+    eval = []
+    for perm in any_of_perm:
+        if perm in client.access:
+            eval.append(True)
+    if any(eval):
         return True
     else:
         raise HTTPException(
