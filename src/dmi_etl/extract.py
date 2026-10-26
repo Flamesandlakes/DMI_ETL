@@ -1,5 +1,6 @@
 import requests
 import time
+from dmi_etl.utility import Credentials
 
 class RateConstraint():
     # DMI_ratelimit is 500 requests per 5 seconds, = 0.6 sec per request 
@@ -20,8 +21,6 @@ class RateConstraint():
                 self.reset_call_count()
                 self.reference_time = time.time()
 
-
-# testfunction inspired by article to extract data from the API
 
 
 # function to extract data from the API
@@ -47,6 +46,27 @@ def get_station_data(station_list):
         ratefollower.count_call()
         
     return data_list
+
+def get_data_from_api_with_credentials(base_url: str, parameters: dict, 
+                                      api_credentials: Credentials):
+    # Note: Assumes that the api_token string contains both the id and the secret key (seperated by a colon)
+    headers = {"Authorization": f"Bearer {api_credentials.spac_api_id+":"+api_credentials.spac_api_key}"}
+    response = requests.get(url = base_url,
+                            params=parameters if parameters else {},
+                            headers = headers
+                            )
+    data = response.json()
+    return data
+
+
+if __name__ == "__main__":
+    cred = Credentials()
+    #parameters = {"sensor":"humidity"}
+    data = get_data_from_api_with_credentials("https://herodot.spac.dk/api/v1/observations", 
+                                              {}, 
+                                              api_credentials=cred)
+    print(f"data: \n{data}")
+
 
 """
 if __name__ == "__main__":
