@@ -68,8 +68,9 @@ if __name__ == "__main__":
     data = get_data_from_api_with_credentials("https://herodot.spac.dk/api/v1/observations", 
                                               {}, 
                                               api_credentials=cred)
-    print(f"data: \n{data}")
-
+    print(f"data: \n{data}") 
+    # {'observation': [{'observationId':, 'nodeId':, 'instrumentId':, 'instrumentModel':, 'sensor':, 'readingId':, 'value':, 'timestamp':'2026-10-27T13:56:07.084659Z'}, {...}]}
+    
 
 """
 if __name__ == "__main__":

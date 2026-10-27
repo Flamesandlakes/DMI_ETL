@@ -18,7 +18,7 @@ API_parameters = {"DMI readings": ["temp_mean_past1h", "wind_speed_past1h",
                                    "Københavns Lufthavn", "Roskilde Lufthavn", "Holbæk Flyveplads", 
                                    "Tessebølle",
                                    "Gedser"],
-                  "SPAC readings": ["all"],
+                  "SPAC readings": ["ALL"],
                   "SPAC stations": ["Ballerup"]}
 
 station_name_to_id = {"Sjælsmark": "06188", 
@@ -97,7 +97,7 @@ class ErrorLogger():
 class UserInterface(ErrorLogger):
     def __init__(self):
         self.session_errors = []
-        self.halt = 0
+        self.halt = 1
         self.root = None
     
     def start(self): # create the root and add the widgets
@@ -113,7 +113,8 @@ class UserInterface(ErrorLogger):
         if self.has_root():
             self.root.mainloop()
 
-    def continue_pipeline(self): # might be redundant vs. cleanup
+    def continue_pipeline(self):
+        self.halt = 0
         self.cleanup() # move to cleanup with changing the exit code
 
     def halt_pipeline(self) -> None:
@@ -128,6 +129,8 @@ class UserInterface(ErrorLogger):
     def has_root(self): 
         return self.root is not None
     
+    
+    
     def create_widgets(self):
         # if self.has_root == False:
         #     self.record_error("Error: No root Tk() object to attach widgets to.")
@@ -135,19 +138,40 @@ class UserInterface(ErrorLogger):
         #     return 1
         # Create labels for the input fields
         tk.Label(self.root, text="Choose API").grid(row=0, column=0, padx=10, pady=10)
-        tk.Label(self.root, text="Choose parameter").grid(row=1, column=0, padx=10, pady=10)
-        tk.Label(self.root, text="Specify start date").grid(row=2, column=0, padx=10, pady=(10,3))
-        tk.Label(self.root, text="Specify start time\n (FORMAT: HH:MM:SS)").grid(row=3, column=0, padx=10, pady=(3,10))
-        tk.Label(self.root, text="Specify end date").grid(row=2, column=2, padx=10, pady=(10,3))
-        tk.Label(self.root, text="Specify end time\n (FORMAT: HH:MM:SS)").grid(row=3, column=2, padx=10, pady=(3,10))
-        tk.Label(self.root, text="Set coordinates for readings area,\n bound by SE point to NW point\n (FORMAT: W,S,E,N)").grid(row=6, column=0, padx=10, pady=(10,3))
-        tk.Label(self.root, text="Set limit\n (Number of readings to retrieve, per parameter)").grid(row=7, column=0, padx=10, pady=(10,3))
-
+        
          # "Choose API" dropdown menu
         self.api_source_choice= ttk.Combobox(self.root, values=list(API_options.keys()))
         self.api_source_choice.grid(row=0, column=1, padx=10, pady=10)
-        self.api_source_choice.bind("<<ComboboxSelected>>", self.update_parameters)
+        self.api_source_choice.bind("<<ComboboxSelected>>", self.update_options)
     
+    
+        # Submit and continue button
+        continue_button = tk.Button(self.root, text="Submit request\n and continue", command=self.submit_and_continue)
+        continue_button.grid(row=8, column=2, columnspan=1, pady=20, ipadx = 30)
+
+        # Exit button
+        exit_button = tk.Button(self.root, text="Exit", command=self.halt_pipeline)
+        exit_button.grid(row=8, column=3, columnspan=1, pady=10, ipadx = 30, ipady=8)
+        
+        #return 0
+
+    def create_optional_DMI_widgets(self):
+        # Create labels for the input fields
+        self.label_param = tk.Label(self.root, text="Choose parameter")
+        self.label_param.grid(row=1, column=0, padx=10, pady=10)
+        self.label_start_date = tk.Label(self.root, text="Specify start date")
+        self.label_start_date.grid(row=2, column=0, padx=10, pady=(10,3))
+        self.label_start_time = tk.Label(self.root, text="Specify start time\n (FORMAT: HH:MM:SS)")
+        self.label_start_time.grid(row=3, column=0, padx=10, pady=(3,10))
+        self.label_end_date = tk.Label(self.root, text="Specify end date")
+        self.label_end_date.grid(row=2, column=2, padx=10, pady=(10,3))
+        self.label_end_time = tk.Label(self.root, text="Specify end time\n (FORMAT: HH:MM:SS)")
+        self.label_end_time.grid(row=3, column=2, padx=10, pady=(3,10))
+        self.label_bbox = tk.Label(self.root, text="Set coordinates for readings area,\n bound by SE point to NW point\n (FORMAT: W,S,E,N)")
+        self.label_bbox.grid(row=6, column=0, padx=10, pady=(10,3))
+        self.label_limit = tk.Label(self.root, text="Set limit\n (Number of readings to retrieve, per parameter)")
+        self.label_limit.grid(row=7, column=0, padx=10, pady=(10,3))
+        
         # "Choose Parameter" listbox
         self.parameter_choice = tk.Listbox(self.root, selectmode="multiple", height=0)
         self.parameter_choice.grid(row=1, column=1)
@@ -184,40 +208,45 @@ class UserInterface(ErrorLogger):
         self.limit_entry = tk.Entry(self.root, textvariable= default_limit)
         self.limit_entry.grid(row=7, column=1, padx=10, pady=(10,10))
     
-        # Submit and continue button
-        continue_button = tk.Button(self.root, text="Submit request\n and continue", command=self.submit_and_continue)
-        continue_button.grid(row=8, column=2, columnspan=1, pady=20, ipadx = 30)
-
-        # Exit button
-        exit_button = tk.Button(self.root, text="Exit", command=self.halt_pipeline)
-        exit_button.grid(row=8, column=3, columnspan=1, pady=10, ipadx = 30, ipady=8)
+    def remove_optional_DMI_widgets(self):
+        if hasattr(self, "start_date"):
+            option_widgets = [  self.label_param,
+                                self.label_start_date,
+                                self.label_start_time,
+                                self.label_end_date,
+                                self.label_end_time,
+                                self.label_bbox,
+                                self.label_limit,
+                                self.parameter_choice,
+                                self.start_date,
+                                self.start_time,
+                                self.end_date,
+                                self.end_time,
+                                self.bbox_entry,
+                                self.limit_entry]
+            for w in option_widgets:
+                            w.destroy()
         
-        #return 0
-
-    
     ### Functions ###
-    def update_parameters(self, event):
+    def update_options(self, event):
         selected_api = self.api_source_choice.get()
+        
+        self.update_widgets(selected_api)
+        self.update_parameters(selected_api)
+    
+    def update_parameters(self, selected_api):
         parameter_options = API_parameters.get(selected_api, [])
         parameter_options.sort()
-        self.parameter_choice.delete(0, tk.END)
-        self.parameter_choice.insert(tk.END, *parameter_options)
-        self.update_widgets(selected_api)
+        if hasattr(self, "parameter_choice"):
+            self.parameter_choice.delete(0, tk.END)
+            self.parameter_choice.insert(tk.END, *parameter_options)
+        
 
     def update_widgets(self, selected_api):
-        option_widgets = [self.parameter_choice,
-                    self.start_date,
-                    self.start_time,
-                    self.end_date,
-                    self.end_time,
-                    self.bbox_entry,
-                    self.limit_entry]
         if selected_api == "DMI readings":
-            for w in option_widgets:
-                w.grid()
+            self.create_optional_DMI_widgets()
         else:
-            for w in option_widgets:
-                w.grid_forget()
+            self.remove_optional_DMI_widgets()
             
 
     def get_selected_timeperiod(self) -> str:
@@ -242,27 +271,38 @@ class UserInterface(ErrorLogger):
     # Get all the user input values and return them as a list of request packages
     def get_user_input(self):
         selected_api = self.api_source_choice.get()
-        chosen_parameters = self.parameter_choice.curselection()
-        time_period = self.get_selected_timeperiod()
-        bbox_entry_value = self.bbox_entry.get()
-        if validate_input(bbox_entry_value, "coordinates") == False:
-            self.log_error("ERROR: Coordinate sets does not adhere to format.")
-        limit_entry_value = self.limit_entry.get()
-        if limit_entry_value == "-1":
-            limit_entry_value = "300000" # the max possible value accepted by the api
-        if validate_input(limit_entry_value, "integer") == False:
-            self.log_error("ERROR: Limit not set as an integer.")
+        if selected_api == "DMI readings":
+            chosen_parameters = self.parameter_choice.curselection()
+            
+            time_period = self.get_selected_timeperiod()
+            bbox_entry_value = self.bbox_entry.get()
+            if validate_input(bbox_entry_value, "coordinates") == False:
+                self.log_error("ERROR: Coordinate sets does not adhere to format.")
+            limit_entry_value = self.limit_entry.get()
+            if limit_entry_value == "-1":
+                limit_entry_value = "300000" # the max possible value accepted by the api
+            if validate_input(limit_entry_value, "integer") == False:
+                self.log_error("ERROR: Limit not set as an integer.")
+        else:
+            chosen_parameters = ["ALL"]
+        
         request_packages = [] # create a request package for each selected parameter (since multiple parameterIds will otherwise conflict with the API)
-        for i in chosen_parameters:
-            selected_parameter = self.parameter_choice.get(i)
-            request_package = {"api": selected_api, "api_url": API_options.get(selected_api), 
-                            "api_parameters": {"parameterId": selected_parameter, "datetime": time_period, 
-                                                "bbox": bbox_entry_value, "limit": limit_entry_value}}
+        
+        for i in chosen_parameters: # in case of no parameters, pass ["ALL"] if not DMI
+            if selected_api == "DMI readings":
+                selected_parameter = self.parameter_choice.get(i)
+                request_package = {"api": selected_api, "api_url": API_options.get(selected_api), 
+                                "api_parameters": {"parameterId": selected_parameter, "datetime": time_period, 
+                                                    "bbox": bbox_entry_value, "limit": limit_entry_value}}
+            else:
+                request_package = {"api": selected_api, "api_url": API_options.get(selected_api), 
+                                "api_parameters": {}}
             request_packages.append(request_package)
 
         self.request_packages = request_packages
         self.halt = self.error_check()
-        
+    
+    #def create_package(self, api_parameters)
 
     # store the request and exit the interface
     def submit_and_continue(self):

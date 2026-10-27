@@ -3,7 +3,7 @@
 create_readings_table_query = """
     CREATE TABLE IF NOT EXISTS readings_data(
                 parameter_name text,
-                value decimal(6,2),
+                value decimal(10,2),
                 reading_id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                 station_id text,
                 time time,

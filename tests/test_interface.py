@@ -1,4 +1,4 @@
-from dmi_etl.interface import UserInterface, validate_input, ErrorLogger
+from dmi_etl.interface import UserInterface, validate_input, ErrorLogger, API_parameters
 from unittest.mock import Mock, MagicMock
 from unittest.mock import patch
 import tkinter
@@ -166,26 +166,27 @@ class TestUserInterface(unittest.TestCase):
         with patch("dmi_etl.interface"):#.messagebox.askretrycancel"):
             self.assertEqual(self.ui.get_selected_timeperiod(), "")
 
-    def test_no_parameters_selected_yields_empty_packages(self):
+    def test_no_parameters_selected_yields_empty_packages_for_dmi(self):
+        self.ui.api_source_choice.get.return_value = "DMI readings"
         self.ui.parameter_choice.curselection.return_value = []
         with patch("dmi_etl.interface.messagebox.askretrycancel", return_value = True):
             self.ui.get_user_input()
             self.assertEqual(self.ui.request_packages, [])
 
-    def test_no_parameters_selected_yields_empty_packages(self):
-            self.ui.api_source_choice.get.return_value = "DMI readings"
-            self.ui.parameter_choice.curselection.return_value = [1] # simulate n of chosen parameters
-            self.ui.parameter_choice.get.side_effect = ["wind_speed_past1h"] # the name of the chosen parameters
-            self.ui.start_date.get_date.return_value = "2026-10-01"
-            self.ui.start_time.get.return_value = "100:00:00"
-            self.ui.end_date.get_date.return_value = "2026-10-02"
-            self.ui.end_time.get.return_value = "00:00:00"
-            self.ui.bbox_entry.get.return_value = "7,16,58"
-            self.ui.limit_entry.get.return_value = "hundred"
-            self.ui.parameter_choice.curselection.return_value = []
-            with patch("dmi_etl.interface.messagebox.askretrycancel", return_value = True):
-                self.ui.get_user_input()
-                self.assertEqual(self.ui.request_packages, [])
+    def test_no_parameters_selected_yields_empty_packages_for_dmi(self):
+        self.ui.api_source_choice.get.return_value = "DMI readings"
+        self.ui.parameter_choice.curselection.return_value = [1] # simulate n of chosen parameters
+        self.ui.parameter_choice.get.side_effect = ["wind_speed_past1h"] # the name of the chosen parameters
+        self.ui.start_date.get_date.return_value = "2026-10-01"
+        self.ui.start_time.get.return_value = "100:00:00"
+        self.ui.end_date.get_date.return_value = "2026-10-02"
+        self.ui.end_time.get.return_value = "00:00:00"
+        self.ui.bbox_entry.get.return_value = "7,16,58"
+        self.ui.limit_entry.get.return_value = "hundred"
+        self.ui.parameter_choice.curselection.return_value = []
+        with patch("dmi_etl.interface.messagebox.askretrycancel", return_value = True):
+            self.ui.get_user_input()
+            self.assertEqual(self.ui.request_packages, [])
 
     def test_mock_run(self):
         ui = UserInterface()
@@ -229,7 +230,7 @@ class TestUserInterface(unittest.TestCase):
         self.assertEqual(pkg["api_parameters"]["parameterId"], "temp_mean_past1h")
         self.assertEqual(pkg["api_parameters"]["limit"], "300000")
 
-class TestWidgetsMethods(unittest.TestCase):
+class WidgetsTestCase(unittest.TestCase):
     def setUp(self):
         # Patch where the code under test looks the names up
         patcher_tk = unittest.mock.patch("dmi_etl.interface.tk")
@@ -256,7 +257,8 @@ class TestWidgetsMethods(unittest.TestCase):
         self.app.halt_pipeline = MagicMock()
 
         self.app.create_widgets()
-    
+
+class TestCreateWidgets(WidgetsTestCase):
     @patch("dmi_etl.interface.tk.Tk")  # point to module where interface is located
     def test_start_calls_add_widgets(self, mock_tk_obj):
         mock_root = MagicMock()
@@ -275,31 +277,74 @@ class TestWidgetsMethods(unittest.TestCase):
         mock_root.title.assert_called_once_with("Define API call")
         ui.create_widgets.assert_called_once() # assert that add_widgets method was executed
         assert mock_root.mainloop.call_count == 0 # the mainloop should not be called in the mock
+    
+    @patch("dmi_etl.interface.tk.Tk")  # point to module where interface is located
+    def test_create_optional_widgets(self, mock_tk_obj):
+        mock_root = MagicMock()
+        mock_tk_obj.return_value = mock_root
+
+        ui = UserInterface()
+
+        # replace the add_widgets method with a mock
+        ui.create_widgets = MagicMock()
+        ui.update_options = MagicMock()
         
-    def test_widget_labels_created(self):
+
+        ui.start()
+        #print(type(ui.root)) 
+
+        # assertions
+        mock_tk_obj.assert_called_once()
+        mock_root.title.assert_called_once_with("Define API call")
+        ui.create_widgets.assert_called_once() # assert that add_widgets method was executed
+        assert mock_root.mainloop.call_count == 0 # the mainloop should not be called in the mock
+            
+    def test_widget_label_created(self):
         actual = [c.kwargs["text"] for c in self.mock_tk.Label.call_args_list]
         expected = [
-            "Choose API",
-            "Choose parameter",
-            "Specify start date",
-            "Specify start time\n (FORMAT: HH:MM:SS)",
-            "Specify end date",
-            "Specify end time\n (FORMAT: HH:MM:SS)",
-            "Set coordinates for readings area,\n bound by SE point to NW point\n (FORMAT: W,S,E,N)",
-            "Set limit\n (Number of readings to retrieve, per parameter)",
+            "Choose API"
+            # "Choose parameter",
+            # "Specify start date",
+            # "Specify start time\n (FORMAT: HH:MM:SS)",
+            # "Specify end date",
+            # "Specify end time\n (FORMAT: HH:MM:SS)",
+            # "Set coordinates for readings area,\n bound by SE point to NW point\n (FORMAT: W,S,E,N)",
+            # "Set limit\n (Number of readings to retrieve, per parameter)",
         ]
         self.assertEqual(actual, expected)
 
-    def test_every_label_is_gridded(self):
-        self.assertEqual(self.mock_tk.Label.return_value.grid.call_count, 8)
+    def test_first_label_is_gridded(self):
+        self.assertEqual(self.mock_tk.Label.return_value.grid.call_count, 1)
         
     def test_update_parameters_reads_combobox_selection(self):
         with unittest.mock.patch("dmi_etl.interface.API_parameters", {}):
-            self.app.update_parameters(event=MagicMock())
+            self.app.update_parameters("DMI_readings")
 
-        self.app.api_source_choice.get.assert_called_once_with()
+        self.app.parameter_choice.delete.assert_called_once()
+        
+class TestUpdateParameters(WidgetsTestCase):
 
+    def test_dmi_readings_inserted_sorted(self):
+        self.app.update_parameters("DMI readings")
 
+        expected_sorted = sorted(API_parameters["DMI readings"])
+        self.app.parameter_choice.assert_has_calls([
+            unittest.mock.call.delete(0, self.mock_tk.END),
+            unittest.mock.call.insert(self.mock_tk.END, *expected_sorted),
+        ])
+
+    def test_create_then_remove_forgets_all_optional_widgets(self):
+        self.app.create_optional_DMI_widgets()
+        self.app.remove_optional_DMI_widgets()
+
+        optional_attrs = [
+            "label_param", "label_start_date", "label_start_time",
+            "label_end_date", "label_end_time", "label_bbox",
+            "label_limit", "parameter_choice", "start_date", "start_time",
+            "end_date", "end_time", "bbox_entry", "limit_entry",
+        ]
+        #for attr in optional_attrs:
+        assert getattr(self.app, optional_attrs[0]).destroy.call_count == 7
 
 ### Partially generated tests for widget methods 
 # @unittest.skipUnless(hasattr(tkinter, "Tk"), "Tk available")

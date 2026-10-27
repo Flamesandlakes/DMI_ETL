@@ -23,6 +23,7 @@ def Get_Parameter_From_Properties(data,parameter_name):
 
 """Converts the datetime string into seperate date and time"""
 def Convert_To_Date_And_Time(datetime_string):
+    datetime_string = Normalize_Datetime(datetime_string)
     Date_obj = datetime.datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%SZ")
     Date = Date_obj.strftime("%Y-%m-%d")
     Time = Date_obj.strftime("%H:%M:%S")
@@ -112,3 +113,33 @@ def ParameterCheck(feature, parameterlist):
                 allValid = False
                 break
     return allValid
+
+
+"""Normalize all datetime.datetime timestamps to second precision (dop milliseconds)"""
+def Normalize_Datetime(datetime_string: str):
+    # to seconds (ie. drop milliseconds)
+    string =  datetime_string.split(".")[0]
+    if string.endswith("Z"):
+        return string
+    else:
+        return string + "Z"
+
+def Format_Value(value):
+    return round(value, 2)
+
+"""Take a SPAC obervation and make its naming scheme compatible with the existing pipeline"""
+def Reformat_SPAC_Observation(observation: dict):
+    Date, Time = Convert_To_Date_And_Time(observation["timestamp"])
+    reformated_dict = {"stationId": observation["nodeId"],
+                       "parameterId": observation["sensor"] if observation["instrumentModel"] != "DS18B20" else "temperature",
+                       "value": Format_Value(observation["value"]),
+                       "observedDate": Date,
+                       "observedTime": Time,
+                       "longitude": None,
+                       "latitude": None}
+    return reformated_dict
+
+def Make_Dicts_From_Observations(observations_dict: dict):
+    listOfObs = [Reformat_SPAC_Observation(obs) for obs in observations_dict["observations"]]
+    return listOfObs
+

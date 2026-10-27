@@ -2,6 +2,7 @@ from dmi_etl.extract import *
 from dmi_etl.transform import *
 from dmi_etl.DB_operations import *
 from dmi_etl.interface import UserInterface
+from dmi_etl.utility import Credentials
 import sys
 
 if __name__ == "__main__":
@@ -20,34 +21,55 @@ if __name__ == "__main__":
         # Unpack the package to get the url and parameters
         url, parameters = ui.get_url_and_params(package)
 
-        extractedData = get_data_with_params(url, parameters)
+        if package["api"] == "SPAC readings":
+            extractedData = get_data_from_api_with_credentials(url, parameters, Credentials())
+            listOfDicts = Make_Dicts_From_Observations(extractedData)
+            
+            all_listOfDicts.extend(listOfDicts)
+            
+            all_weather_stations = [{"stationId": "ae6901bb-6703-4955-9d59-179c1ee5dae8", "name": "Ballerup Akademi", "longitude": 12.3876, "latitude": 55.7357},
+                                    {"stationId": "2c47284d-777b-44f0-bdeb-3d442f6a31b1", "name": "Odense Akademi", "longitude": 10.2112 , "latitude": 56.1554},
+                                    {"stationId": "6d437168-7432-470b-9cf4-08439d0127ad", "name": "Aarhus Akademi", "longitude": 10.3880 , "latitude": 55.4025}
+                                    ]
+            
+            
+        
+        elif package["api"] == "DMI readings":
+            extractedData = get_data_with_params(url, parameters)
+            
+            parameterlist = ["properties.stationId", "properties.parameterId",  "properties.value", "properties.observed", "geometry"]
+            listOfDicts = Make_Dicts_From_Collection_And_Parameter_List(extractedData, parameterlist)
+    
+            all_listOfDicts.extend(listOfDicts)
 
-        parameterlist = ["properties.stationId", "properties.parameterId",  "properties.value", "properties.observed", "geometry"]
-        listOfDicts = Make_Dicts_From_Collection_And_Parameter_List(extractedData, parameterlist)
-        all_listOfDicts.extend(listOfDicts)
+            # Collect supplementary (but also required) data on stations in extracted data
+            uniqueStationIds = set(Get_Unique_Dict_Items_From_List(listOfDicts, "stationId"))
+            stations_to_request = []
+            for id in uniqueStationIds:
+                if id not in all_uniqueStationIds:
+                    stations_to_request.append(id)
+                    all_uniqueStationIds.append(id)
 
-        # Collect supplementary (but also required) data on stations in extracted data
-        uniqueStationIds = set(Get_Unique_Dict_Items_From_List(listOfDicts, "stationId"))
-        stations_to_request = []
-        for id in uniqueStationIds:
-            if id not in all_uniqueStationIds:
-                stations_to_request.append(id)
-                all_uniqueStationIds.append(id)
+            weather_stations = get_station_data(stations_to_request)
 
-        weather_stations = get_station_data(stations_to_request)
+            parameterlist_stations = ["properties.stationId",  "properties.name", "geometry"]
+            weather_stations = Make_Dicts_From_List_And_Parameter_List(weather_stations,parameterlist_stations)
+            
+            # something something, convert the format of weather_stations to the one below for each entry:
+            # [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
 
-        parameterlist_stations = ["properties.stationId",  "properties.name", "geometry"]
-        weather_stations = Make_Dicts_From_List_And_Parameter_List(weather_stations,parameterlist_stations)
-        # something something, convert the format of weather_stations to the one below for each entry:
-        # [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
-
-        #all_uniqueStationIds = all_uniqueStationIds.union(uniqueStationIds)
-        all_weather_stations.extend(weather_stations)
+            #all_uniqueStationIds = all_uniqueStationIds.union(uniqueStationIds)
+            all_weather_stations.extend(weather_stations)
     print(f"Data collected for all chosen parameters.\nNow loading ...")
     parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"},
                       {"name":"humidity_past1h", "unit":"Percent", "frequency":"Hourly"},
                       {"name":"precip_past1h", "unit":"Kilograms per Square Meter", "frequency":"Hourly"},
-                      {"name":"wind_speed_past1h", "unit":"Meters per Second", "frequency":"Hourly"}]
+                      {"name":"wind_speed_past1h", "unit":"Meters per Second", "frequency":"Hourly"},
+                      {"name":"temperature", "unit":"TBD", "frequency":"TBD"},
+                      {"name":"humidity", "unit":"TBD", "frequency":"TBD"},
+                      {"name":"co2_concentration","unit":"TBD", "frequency":"TBD"},
+                      {"name":"pressure", "unit":"TBD", "frequency":"TBD"}
+                      ]
 
     #weather_station = [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
     #parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"}]
