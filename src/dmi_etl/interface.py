@@ -147,11 +147,11 @@ class UserInterface(ErrorLogger):
     
         # Submit and continue button
         continue_button = tk.Button(self.root, text="Submit request\n and continue", command=self.submit_and_continue)
-        continue_button.grid(row=8, column=2, columnspan=1, pady=20, ipadx = 30)
+        continue_button.grid(row=8, column=2, columnspan=1, pady=20, padx=10, ipadx = 30)
 
         # Exit button
         exit_button = tk.Button(self.root, text="Exit", command=self.halt_pipeline)
-        exit_button.grid(row=8, column=3, columnspan=1, pady=10, ipadx = 30, ipady=8)
+        exit_button.grid(row=8, column=3, columnspan=1, pady=10, padx=10, ipadx = 30, ipady=8)
         
         #return 0
 
