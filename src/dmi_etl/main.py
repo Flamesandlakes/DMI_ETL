@@ -31,8 +31,31 @@ if __name__ == "__main__":
                                     {"stationId": "2c47284d-777b-44f0-bdeb-3d442f6a31b1", "name": "Odense Akademi", "longitude": 10.2112 , "latitude": 56.1554},
                                     {"stationId": "6d437168-7432-470b-9cf4-08439d0127ad", "name": "Aarhus Akademi", "longitude": 10.3880 , "latitude": 55.4025}
                                     ]
+        elif package["api"] == "Our api":
+            identification = ui.get_url_and_params(package)
+            extractedData = get_data_with_params(url+"/readings", parameters, identification)
             
-            
+            parameterlist = ["properties.stationId", "properties.parameterId",  "properties.value", "properties.date", "properties.time", "geometry"]
+            listOfDicts = Make_Dicts_From_Collection_And_Parameter_List(extractedData, parameterlist)
+    
+            all_listOfDicts.extend(listOfDicts)
+
+            # Collect supplementary (but also required) data on stations in extracted data
+            uniqueStationIds = set(Get_Unique_Dict_Items_From_List(listOfDicts, "stationId"))
+            stations_to_request = []
+            for id in uniqueStationIds:
+                if id not in all_uniqueStationIds:
+                    stations_to_request.append(id)
+                    all_uniqueStationIds.append(id)
+
+            weather_stations =[]
+            for station in stations_to_request:
+                station_data = get_data(url+"/stations/?station_id"+station, identification)
+                weather_stations.append(station_data)
+
+            parameterlist_stations = ["properties.stationId",  "properties.name", "geometry"]
+            weather_stations = Make_Dicts_From_List_And_Parameter_List(weather_stations,parameterlist_stations)
+                        
         
         elif package["api"] == "DMI readings":
             extractedData = get_data_with_params(url, parameters)
@@ -73,7 +96,7 @@ if __name__ == "__main__":
 
     #weather_station = [{"station_id":"06019", "latitude":55.8766, "longitude": 12.4294}]
     #parameter_info = [{"name":"temp_mean_past1h", "unit":"Celsius", "frequency":"Hourly"}]
-
+    print(len(all_listOfDicts))
     commit_to_postgres(all_weather_stations,parameter_info,all_listOfDicts)
     print("... Data successfully loaded.")
     # #print(listOfDicts)

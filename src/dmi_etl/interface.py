@@ -9,11 +9,14 @@ import datetime
 ### Dictionaries for API options and parameters ###
 API_options = {"DMI readings": "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items",
                #"DMI stations": "https://opendataapi.dmi.dk/v2/metObs/collections/station/items",
-               "SPAC readings": "https://herodot.spac.dk/api/v1/observations"
+               "SPAC readings": "https://herodot.spac.dk/api/v1/observations",
+               "Our api": "http://192.168.113.9:8000/readings"
                }
 
 API_parameters = {"DMI readings": ["temp_mean_past1h", "wind_speed_past1h", 
                                    "precip_past1h", "humidity_past1h"],
+                  "Our api": ["temp_mean_past1h", "wind_speed_past1h", 
+                                   "precip_past1h", "humidity_past1h"],                                   
                   "DMI stations": ["Sjælsmark", "Jægersborg", 
                                    "Københavns Lufthavn", "Roskilde Lufthavn", "Holbæk Flyveplads", 
                                    "Tessebølle",
@@ -171,7 +174,7 @@ class UserInterface(ErrorLogger):
         self.label_bbox.grid(row=6, column=0, padx=10, pady=(10,3))
         self.label_limit = tk.Label(self.root, text="Set limit\n (Number of readings to retrieve, per parameter)")
         self.label_limit.grid(row=7, column=0, padx=10, pady=(10,3))
-        
+           
         # "Choose Parameter" listbox
         self.parameter_choice = tk.Listbox(self.root, selectmode="multiple", height=0)
         self.parameter_choice.grid(row=1, column=1)
@@ -207,8 +210,98 @@ class UserInterface(ErrorLogger):
 
         self.limit_entry = tk.Entry(self.root, textvariable= default_limit)
         self.limit_entry.grid(row=7, column=1, padx=10, pady=(10,10))
+
+
+    def create_optional_our_widgets(self):
+        # Create labels for the input fields
+        self.label_param = tk.Label(self.root, text="Choose parameter")
+        self.label_param.grid(row=1, column=0, padx=10, pady=10)
+        self.label_start_date = tk.Label(self.root, text="Specify start date")
+        self.label_start_date.grid(row=2, column=0, padx=10, pady=(10,3))
+        self.label_start_time = tk.Label(self.root, text="Specify start time\n (FORMAT: HH:MM:SS)")
+        self.label_start_time.grid(row=3, column=0, padx=10, pady=(3,10))
+        self.label_end_date = tk.Label(self.root, text="Specify end date")
+        self.label_end_date.grid(row=2, column=2, padx=10, pady=(10,3))
+        self.label_end_time = tk.Label(self.root, text="Specify end time\n (FORMAT: HH:MM:SS)")
+        self.label_end_time.grid(row=3, column=2, padx=10, pady=(3,10))
+        self.label_bbox = tk.Label(self.root, text="Set coordinates for readings area,\n bound by SE point to NW point\n (FORMAT: W,S,E,N)")
+        self.label_bbox.grid(row=6, column=0, padx=10, pady=(10,3))
+        self.label_limit = tk.Label(self.root, text="Set limit\n (Number of readings to retrieve, per parameter)")
+        self.label_limit.grid(row=7, column=0, padx=10, pady=(10,3))
+        
+        self.label_url = tk.Label(self.root, text="Url for custom api call")
+        self.label_url.grid(row=8, column=0, padx=10, pady=(10,3)) 
+        self.label_username = tk.Label(self.root, text="Username for custom api all")
+        self.label_username.grid(row=6, column=2, padx=10, pady=(10,3))
+        self.label_password = tk.Label(self.root, text="Password for custom api all")
+        self.label_password.grid(row=7, column=2, padx=10, pady=(10,3))       
+        # "Choose Parameter" listbox
+        self.parameter_choice = tk.Listbox(self.root, selectmode="multiple", height=0)
+        self.parameter_choice.grid(row=1, column=1)
+
+        #### Calendar inputs ####
+        default_start_time = tk.StringVar(self.root, value = default_values["time"])
+        default_end_time = tk.StringVar(self.root, value = default_values["time"])
+
+        # Start Date calendar input
+        self.start_date = DateEntry(self.root, width=12, background='lightblue', foreground='white', borderwidth=2, date_pattern='dd/mm/y')
+        self.start_date.grid(row=2, column=1, padx=10, pady=(12,3))
     
+        # Start Time entry
+        self.start_time = tk.Entry(self.root, textvariable= default_start_time)
+        self.start_time.grid(row=3, column=1, padx=10, pady=(3,12))
+    
+        # End Date calendar input
+        self.end_date = DateEntry(self.root, width=12, background='blue', foreground='white', borderwidth=2, date_pattern='dd/mm/y')
+        self.end_date.grid(row=2, column=3, padx=10, pady=(12,3))
+    
+        # End Time entry
+        self.end_time = tk.Entry(self.root, textvariable= default_end_time)
+        self.end_time.grid(row=3, column=3, padx=10, pady=(3,12))
+    
+        # Bounding Box entry
+        default_coords = tk.StringVar(self.root, value = default_values["coordinates"])
+
+        self.bbox_entry = tk.Entry(self.root, textvariable = default_coords)
+        self.bbox_entry.grid(row=6, column=1, padx=10, pady=(10,10))
+    
+        # Limit entry
+        default_limit = tk.StringVar(self.root, value= default_values['limit'])
+
+        self.limit_entry = tk.Entry(self.root, textvariable= default_limit)
+        self.limit_entry.grid(row=7, column=1, padx=10, pady=(10,10))
+
+
+        # Optional url entry
+        default_url = tk.StringVar(self.root, value= API_options.get("Our api")) 
+
+        self.url_entry = tk.Entry(self.root, textvariable= default_url)
+        self.url_entry.grid(row=8, column=1, padx=10, pady=(10,10))
+
+        # usename
+        default_username = tk.StringVar(self.root, value= "tester")
+
+        self.username_entry = tk.Entry(self.root, textvariable= default_username)
+        self.username_entry.grid(row=6, column=3, padx=10, pady=(10,10))
+
+        # password
+        default_password = tk.StringVar(self.root, value= "kodeord")
+
+        self.password_entry = tk.Entry(self.root, textvariable= default_password)
+        self.password_entry.grid(row=7, column=3, padx=10, pady=(10,10)) 
+
+
+
     def remove_optional_DMI_widgets(self):
+        if hasattr(self, "username_entry"):
+            option_widgets = [  self.label_url,
+                                self.label_username,
+                                self.label_password,
+                                self.url_entry,
+                                self.username_entry,
+                                self.password_entry]
+            for w in option_widgets:
+                            w.destroy()
         if hasattr(self, "start_date"):
             option_widgets = [  self.label_param,
                                 self.label_start_date,
@@ -243,10 +336,11 @@ class UserInterface(ErrorLogger):
         
 
     def update_widgets(self, selected_api):
+        self.remove_optional_DMI_widgets()
         if selected_api == "DMI readings":
             self.create_optional_DMI_widgets()
-        else:
-            self.remove_optional_DMI_widgets()
+        elif selected_api =="Our api":
+            self.create_optional_our_widgets()
             
 
     def get_selected_timeperiod(self) -> str:
@@ -271,7 +365,7 @@ class UserInterface(ErrorLogger):
     # Get all the user input values and return them as a list of request packages
     def get_user_input(self):
         selected_api = self.api_source_choice.get()
-        if selected_api == "DMI readings":
+        if selected_api == "DMI readings" or selected_api == "Our api":
             chosen_parameters = self.parameter_choice.curselection()
             
             time_period = self.get_selected_timeperiod()
@@ -294,6 +388,15 @@ class UserInterface(ErrorLogger):
                 request_package = {"api": selected_api, "api_url": API_options.get(selected_api), 
                                 "api_parameters": {"parameterId": selected_parameter, "datetime": time_period, 
                                                     "bbox": bbox_entry_value, "limit": limit_entry_value}}
+            elif selected_api == "Our api":
+                selected_parameter = self.parameter_choice.get(i)
+                request_package = {"api": selected_api, "api_url": API_options.get(selected_api), 
+                                "Identification": {"username": self.username_entry.get(),
+                                                   "password": self.password_entry.get()},
+                                "api_parameters": {"parameter_name": selected_parameter, 
+                                                   "date_start": self.start_date.get_date(),
+                                                   "date_end": self.end_date.get_date(),
+                                                   "bbox": bbox_entry_value, "limit": limit_entry_value}}
             else:
                 request_package = {"api": selected_api, "api_url": API_options.get(selected_api), 
                                 "api_parameters": {}}
@@ -314,7 +417,12 @@ class UserInterface(ErrorLogger):
         api_url = package.get("api_url")
         api_parameters = package.get("api_parameters")
         return api_url, api_parameters
-
+    
+    def get_identification(self,package) -> dict:
+        api_id = package.get("Identification")
+        return api_id
+            
+    
 # if __name__ == "__main__":
 #     ui = UserInterface()
 #     ui.run()
