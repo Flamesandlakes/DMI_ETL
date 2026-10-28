@@ -1,19 +1,33 @@
-from fastapi import FastAPI, Query, Depends, HTTPException
+from typing import Annotated
+from fastapi import FastAPI, Query, Depends, HTTPException, Security
 from sqlalchemy import create_engine, Column, Integer, String, Numeric, Time, Date, Identity
 from sqlalchemy.orm import sessionmaker, Session
 import sqlalchemy
 from pydantic import BaseModel
-from typing import Annotated
 import datetime
+from dmi_etl.api_auth import app as auth_router
+from dmi_etl.api_auth import User, get_current_active_user, check_authorization
 
 from dmi_etl.DB_operations import *
 
-app = FastAPI()
+## define order in Swagger order based on tags, after the order in the dict
+tags_order_dict = [
+    {"name": "authentication"},
+    {"name": "climate readings"},
+    {"name": "metadata"}
+]
+app = FastAPI(title="DMI ETL Pipeline API",
+              openapi_tags=tags_order_dict)
 engine = get_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = sqlalchemy.orm.declarative_base()
 
+# integrate method from authentication
+#app.post = dmi_etl.api_auth.app.post
+app.include_router(auth_router,tags=["authentication"]) 
 
+
+# CRUD, first defining format of respective database rows/entries, and then the CRUD methods themselves
 class Parameter(Base):
     __tablename__ = "parameter_data"
     __table_args__ = {"schema": "climate"}
@@ -153,8 +167,11 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/parameters/", response_model=ParameterResponse)
-async def create_parameter(parameter: ParameterCreate, db: Session = Depends(get_db)):
+@app.post("/parameters/", response_model=ParameterResponse, tags=["metadata"])
+async def create_parameter(current_user: Annotated[User, Security(get_current_active_user, 
+                                                                  scopes=[])],
+                            parameter: ParameterCreate, db: Session = Depends(get_db)):
+    check_authorization(current_user, "parameters_admin")
     if db.query(Parameter).filter_by(name = parameter.name).first() is not None:
         raise HTTPException(status_code=422, detail=f"parameter {parameter.station_id} already exists. Consider updating existing parameter instead.")
     
@@ -164,8 +181,12 @@ async def create_parameter(parameter: ParameterCreate, db: Session = Depends(get
     db.refresh(db_parameter)
     return db_parameter
 
-@app.get("/parameters/", response_model=list[ParameterResponse])
-async def read_parameter(name: Annotated[str | None, Query] = None, db: Session = Depends(get_db)):
+@app.get("/parameters/", response_model=list[ParameterResponse], tags=["metadata"])
+async def read_parameter(current_user: Annotated[User, Security(get_current_active_user, 
+                                                        scopes=[])],
+                         name: Annotated[str | None, Query] = None, db: Session = Depends(get_db)):
+    check_authorization(current_user, ["parameters_read", "parameters_admin"])
+
     db_parameter = db.query(Parameter)
     if db_parameter.first() is None:
         raise HTTPException(status_code=404, detail="No Parameters found in database.")
@@ -195,9 +216,33 @@ async def update_parameter(name: str, paramUpdate:ParameterUpdate, db: Session =
     db.refresh(db_parameter) #ask db to send the row again and update the object with fresh values
     return db_parameter
 
+#replace the resource with what the client sends
+#if the parameter exists, it will be overwritten
+#if parameter does not exist, respond  with 404
+#the response is the updated parameter
+@app.put("/parameters/{name}", response_model=ParameterResponse, tags=["metadata"]) #fetch the name from the url
+async def update_parameter(current_user: Annotated[User, Security(get_current_active_user, 
+                                                        scopes=[])],
+                           name: str, paramUpdate:ParameterUpdate, db: Session = Depends(get_db)):
+    check_authorization(current_user, "parameters_admin")
+    db_parameter = db.query(Parameter).filter(Parameter.name == name).first() #from the db, get the row with the name from the url.
+    #parameter does not exist, respond with 404
+    if db_parameter is None:
+        raise HTTPException(status_code=404, detail="Parameter not found")
+    #parameter does exist, so overwrite it
+    db_parameter.unit = paramUpdate.unit
+    db_parameter.frequency = paramUpdate.frequency
+    #db.add(db_parameter)
+    db.commit()
+    db.refresh(db_parameter) #ask db to send the row again and update the object with fresh values
+    return db_parameter
 
-@app.delete("/parameters/{name}", status_code=204)
-async def delete_parameter(name:str, db: Session = Depends(get_db)):
+
+@app.delete("/parameters/{name}", status_code=204, tags=["metadata"])
+async def delete_parameter(current_user: Annotated[User, Security(get_current_active_user, 
+                                                    scopes=[])],
+                            name:str, db: Session = Depends(get_db)):
+    check_authorization(current_user, "parameters_admin")
     db_parameter = db.query(Parameter).filter(Parameter.name == name).first()
     #parameter does not exist, respond with 404
     if db_parameter is None:
@@ -207,27 +252,32 @@ async def delete_parameter(name:str, db: Session = Depends(get_db)):
     db.commit()
 
 
-
-@app.post("/stations/", response_model=StationResponse)
-async def create_station(station: StationCreate, db: Session = Depends(get_db)):
-
+@app.post("/stations/", response_model=StationResponse, tags=["metadata"])
+async def create_station(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=[])],
+                         station: StationCreate, db: Session = Depends(get_db)):
+    check_authorization(current_user, "stations_admin")
     if db.query(Station).filter_by(station_id = station.station_id).first() is not None:
         raise HTTPException(status_code=422, detail=f"Station id {station.station_id} already exists. Consider updating existing station instead.")
-
+    
     db_station = Station(**station.model_dump()) #dictionary representation of the model
     db.add(db_station)
     db.commit()
     db.refresh(db_station)
     return db_station
 
-@app.get("/stations/", response_model=StationResponsesInfo)
-async def read_station(
-    station_id: Annotated[str | None, Query] = None, 
-    location_name: Annotated[str | None, Query] = None,
-    bbox: Annotated[str | None, Query] = None,  
-    limit: Annotated[int | None, Query] = None, 
-    offset: Annotated[int | None, Query] = None, 
-    db: Session = Depends(get_db)):
+
+@app.get("/stations/", response_model=StationResponsesInfo, tags=["metadata"])
+async def read_station(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=[])],
+                        station_id: Annotated[str | None, Query] = None, 
+                        location_name: Annotated[str | None, Query] = None,
+                        bbox: Annotated[str | None, Query] = None,  
+                        limit: Annotated[int | None, Query] = None, 
+                        offset: Annotated[int | None, Query] = None, 
+                        db: Session = Depends(get_db)):
+    
+    check_authorization(current_user,["stations_read", "stations_admin"])
     
     db_station = db.query(Station)
     if db_station.first() is None:
@@ -302,13 +352,17 @@ async def read_station(
     return response
 
 
-@app.put("/stations/{station_id}", response_model=StationResponse)
-async def update_parameter(station_id: str, stationUpdate:StationUpdate, db: Session = Depends(get_db)):
+@app.put("/stations/{station_id}", response_model=StationResponse, tags=["metadata"])
+async def update_parameter(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=[])],
+                            station_id: str, stationUpdate:StationUpdate, db: Session = Depends(get_db)):
+    check_authorization(current_user, "stations_admin")
     if db.query(Station).first() is None:
-        raise HTTPException(status_code=404, detail="No stations found in database.")
+            raise HTTPException(status_code=404, detail="No stations found in database.")
+       
     db_station = db.query(Station).filter(Station.station_id == station_id).first()
     if db_station is None:
-        raise HTTPException(status_code=404, detail="Station not found.")
+        raise HTTPException(status_code=404, detail=f"Station with id {station_id} not found.")
     db_station.longitude = stationUpdate.longitude
     db_station.latitude = stationUpdate.latitude
     db_station.location_name = stationUpdate.location_name
@@ -317,19 +371,28 @@ async def update_parameter(station_id: str, stationUpdate:StationUpdate, db: Ses
     return db_station
 
 
-@app.delete("/stations/{station_id}", status_code=204)
-async def delete_station(station_id:str, db: Session = Depends(get_db)):
+
+@app.delete("/stations/{station_id}", status_code=204, tags=["metadata"])
+async def delete_station(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=["stations_admin"])],
+                            station_id:str, db: Session = Depends(get_db)):
+    check_authorization(current_user, "stations_admin")
+
     db_station = db.query(Station).filter(Station.station_id == station_id).first()
     #parameter does not exist, respond with 404
     if db_station is None:
-        raise HTTPException(status_code=404, detail="Station not found.")
+        raise HTTPException(status_code=404, detail=f"Station with id {station_id} not found")
     #parameter exists, delete it
     db.delete(db_station)
     db.commit()
 
 
-@app.post("/readings/", response_model=list[ReadingResponse])
-async def create_reading(readings: list[ReadingCreate], db: Session = Depends(get_db)):
+@app.post("/readings/", response_model=list[ReadingResponse], tags=["climate readings"])
+async def create_reading(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=[])],
+                        readings: list[ReadingCreate], db: Session = Depends(get_db)):
+    check_authorization(current_user, "readings_admin")
+
     db_list =[]
     db_readings = db.query(Reading)
     for reading in readings:
@@ -356,8 +419,10 @@ async def create_reading(readings: list[ReadingCreate], db: Session = Depends(ge
     return db_list
 
 
-@app.get("/readings/", response_model=ReadingResponsesInfo)
+@app.get("/readings/", response_model=ReadingResponsesInfo, tags=["climate readings"])
 async def read_reading(
+    current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=[])],
     parameter_name: Annotated[str | None, Query] = None,
     reading_id: Annotated[int | None, Query] = None,
     station_id: Annotated[str | None, Query] = None, 
@@ -366,6 +431,9 @@ async def read_reading(
     limit: Annotated[int | None, Query] = None, 
     offset: Annotated[int | None, Query] = None,  
     db: Session = Depends(get_db)):
+
+    check_authorization(current_user, ["readings_read", "readings_admin"])
+    
     db_reading = db.query(Reading)
 
     if db_reading.first() is None:
@@ -445,8 +513,10 @@ async def read_reading(
     return response
 
 
-@app.put("/readings/", response_model=ReadingResponse)
+@app.put("/readings/", response_model=ReadingResponse, tags=["climate readings"])
 async def update_reading(
+    current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=[])],
     reading: ReadingCreate,
     parameter_name: Annotated[str | None, Query] = None,
     reading_id: Annotated[int | None, Query] = None,
@@ -454,6 +524,9 @@ async def update_reading(
     date_start: Annotated[datetime.date | None, Query] = None,
     date_end: Annotated[datetime.date | None, Query] = None,
     db: Session = Depends(get_db)):
+
+    check_authorization(current_user, "readings_admin")
+    
     db_reading = db.query(Reading)
     if db_reading.first() is None:
         raise HTTPException(status_code=404, detail="No readings found in database.")
@@ -483,8 +556,13 @@ async def update_reading(
     return db_reading
 
 
-@app.delete("/readings/{reading_id}", status_code=204)
-async def delete_reading(reading_id:int, db: Session = Depends(get_db)):
+@app.delete("/readings/{reading_id}", status_code=204, tags=["climate readings"])
+async def delete_reading(current_user: Annotated[User, Security(get_current_active_user, 
+                                                scopes=[])],
+                        reading_id:int, db: Session = Depends(get_db)):
+    
+    check_authorization(current_user, "readings_admin")
+    
     db_reading = db.query(Reading).filter(Reading.reading_id == reading_id).first()
 
     if db_reading.first() is None:
@@ -496,4 +574,10 @@ async def delete_reading(reading_id:int, db: Session = Depends(get_db)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    import socket
+    hostname = socket.gethostname()
+    IPAddr = socket.gethostbyname(hostname)
+    uvicorn.run(app, host=IPAddr, port=8000)
+
+# uv run uvicorn dmi_etl.api:app --host xxx.xxx.xxx.xx --port 8000
+# where xxx.xxx.xxx.xx is the IPv4 address

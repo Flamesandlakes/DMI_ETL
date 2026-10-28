@@ -18,8 +18,11 @@ dependencies = [
     "customtkinter>=6.0.0",
     "tkcalendar>=1.6.1",
     "pydantic>=2.14.1",
-    "fastapi>=0.147.0",
+    "fastapi[standard]>=0.147.0",
     "uvicorn>=0.54.0",
+    "python-multipart>=0.0.32",
+    "pyjwt>=2.15.1",
+    "pwdlib[argon2]>=0.3.1",
 ]
 
 [project.scripts]
