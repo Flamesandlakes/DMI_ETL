@@ -177,10 +177,10 @@ class test_make_dict(unittest.TestCase):
         self.assertEqual(self.testdict["value"], 0.0)
     
     def test_dict_date(self):
-        self.assertEqual(self.testdict["observedDate"], "2023-10-26")
+        self.assertEqual(self.testdict["Date"], "2023-10-26")
 
     def test_dict_time(self):
-        self.assertEqual(self.testdict["observedTime"], "09:20:00")
+        self.assertEqual(self.testdict["Time"], "09:20:00")
 
 
 """Unit test of list of dictionaries"""
@@ -201,8 +201,8 @@ class test_dictionaries_from_parameters(unittest.TestCase):
         self.assertEqual(self.testlistdict[0]["stationId"],"06126")
         self.assertEqual(self.testlistdict[0]["parameterId"],"leav_hum_dur_past10min")
         self.assertEqual(self.testlistdict[0]["value"],0.0)
-        self.assertEqual(self.testlistdict[0]["observedDate"],"2023-10-26")
-        self.assertEqual(self.testlistdict[0]["observedTime"],"09:20:00")
+        self.assertEqual(self.testlistdict[0]["Date"],"2023-10-26")
+        self.assertEqual(self.testlistdict[0]["Time"],"09:20:00")
         self.assertEqual(self.testlistdict[0]["longitude"],10.4398)
         self.assertEqual(self.testlistdict[0]["latitude"],55.3088)
 

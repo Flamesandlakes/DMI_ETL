@@ -56,7 +56,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         ]
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
         ]
         commit_to_postgres(dummy_stations, dummy_parameters, dummy_readings)
 
@@ -143,7 +143,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         ]
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
         ]
 
         try:
@@ -225,9 +225,9 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         ]
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
         ]
 
         try:
@@ -376,7 +376,7 @@ class TestDBOperations(unittest.TestCase):
         ]
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
         ]
     
         #make fake objects
@@ -429,7 +429,7 @@ class TestDBOperations(unittest.TestCase):
         cursor = Mock()
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"}]
+            "Time": "12:00:00", "Date": "2026-10-01"}]
         load_readings(dummy_readings, cursor)
         assert cursor.execute.call_count ==1
 

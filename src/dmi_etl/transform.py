@@ -8,7 +8,9 @@ to do:
     - names
 """
 
-timeFormat = re.compile('.*-.*-.*:.*:.*')
+datetimeFormat = re.compile('.*-.*-.*:.*:.*')
+timeFormat = re.compile('.*:.*:.*')
+dateFormat = re.compile('.*-.*-.*')
 
 """Gets the geolocation of station as longitude, latitude"""
 def Get_Location(data):
@@ -46,9 +48,13 @@ def Make_Dict_From_Data_And_Parameter_List(data, parameter_list):
             parameter = parameter.removeprefix("properties.")
             parameter_value = Get_Parameter_From_Properties(data,parameter)
 
-            if timeFormat.match(str(parameter_value)) is not None:
+            if datetimeFormat.match(str(parameter_value)) is not None:
                 parameter_date, parameter_time = Convert_To_Date_And_Time(parameter_value)
-                Dictionary.update({parameter+"Date": parameter_date, parameter+"Time": parameter_time})
+                Dictionary.update({"Date": parameter_date, "Time": parameter_time})
+            elif dateFormat.match(str(parameter_value)) is not None:
+                Dictionary.update({"Date": parameter_value})
+            elif timeFormat.match(str(parameter_value)) is not None:
+                Dictionary.update({"Time": parameter_value})
             else:
                 Dictionary.update({parameter: parameter_value})
                 

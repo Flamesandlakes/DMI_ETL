@@ -50,8 +50,8 @@ class Geometry(BaseModel):
     coordinates : list[float, float]
 
 class PropertiesStation(BaseModel):
-    station_id : str
-    location_name : str
+    stationId : str
+    name : str
 
 class StationFeature(BaseModel):
     type : str
@@ -59,9 +59,9 @@ class StationFeature(BaseModel):
     properties : PropertiesStation
 
 class PropertiesReading(BaseModel):
-    parameter_name: str
+    parameterId: str
     value: float
-    station_id: str
+    stationId: str
     time: datetime.time
     date: datetime.date
 
@@ -276,8 +276,8 @@ async def read_station(
         geom = {"type": "point", "coordinates" : [stat.latitude,stat.longitude]}
 
         prop = {}
-        prop["station_id"] = stat.station_id
-        prop["location_name"] = stat.location_name
+        prop["stationId"] = stat.station_id
+        prop["name"] = stat.location_name
         features_list.append({"type": "feature", "geometry": geom, "properties": prop})
 
     response = {}
@@ -416,9 +416,9 @@ async def read_reading(
         geom = {"type": "point", "coordinates" : [associated_station.latitude,associated_station.longitude]}
 
         prop = {}
-        prop["parameter_name"] = read.parameter_name
+        prop["parameterId"] = read.parameter_name
         prop["value"] = read.value
-        prop["station_id"] = read.station_id
+        prop["stationId"] = read.station_id
         prop["date"] = read.date
         prop["time"] = read.time
         features_list.append({"type": "feature", "geometry": geom, "properties": prop})
@@ -434,7 +434,7 @@ async def read_reading(
     self_link["rel"] = "self"
     self_link["type"] = "some type"
     self_link["title"] = "This document"
-
+    
     next_link = {}
     next_link["href"] = "some link"
     next_link["rel"] = "next"

@@ -99,7 +99,7 @@ def load_readings(dict_list, cursor):
     for dictionary in dict_list:
         cursor.execute("INSERT INTO climate.readings_data(parameter_name, value, station_id, time, date) VALUES(%s, %s, %s, %s, %s)" \
         " ON CONFLICT (station_id, parameter_name, date, time) DO NOTHING",
-                       (dictionary["parameterId"], dictionary["value"], dictionary["stationId"], dictionary["observedTime"], dictionary["observedDate"]),
+                       (dictionary["parameterId"], dictionary["value"], dictionary["stationId"], dictionary["Time"], dictionary["Date"]),
         )
 
 # if __name__ == "__main__":
