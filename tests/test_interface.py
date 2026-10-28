@@ -188,6 +188,16 @@ class TestUserInterface(unittest.TestCase):
             self.ui.get_user_input()
             self.assertEqual(self.ui.request_packages, [])
 
+    def test_get_user_input_when_spac(self):
+            self.ui.api_source_choice.get.return_value = "SPAC readings"
+    
+            self.ui.get_user_input()
+    
+            self.assertEqual(len(self.ui.request_packages), 1)
+            pkg = self.ui.request_packages[0]
+            self.assertEqual(pkg["api"], "SPAC readings")
+
+
     def test_mock_run(self):
         ui = UserInterface()
         ui.has_root = MagicMock()

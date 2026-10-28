@@ -230,11 +230,11 @@ class UserInterface(ErrorLogger):
         
     def remove_optional_DMI_widgets(self):
         for widget in getattr(self, "optional_widgets", []):
-            try:
-                if widget.winfo_exists(): # destroy the widget if it exists
-                    widget.destroy()
-            except tk.TclError:
-                pass
+            #try:
+            if widget.winfo_exists(): # destroy the widget if it exists
+                widget.destroy()
+            # except tk.TclError:
+            #     pass
         self.optional_widgets = []
         # clear named refs, so it can be "reused" when create_optional...() 
         for name in ("parameter_choice", "start_date", "start_time",
