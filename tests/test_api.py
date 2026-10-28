@@ -1,6 +1,7 @@
 from dmi_etl.DB_operations import *
 from dmi_etl.api import *
 from dmi_etl.api import app
+from dmi_etl.api_auth import UserInDB
 from dmi_etl.table_setup import create_parameter_table_query, create_readings_table_query, create_station_table_query
 from unittest.mock import Mock
 from unittest.mock import patch
@@ -54,6 +55,13 @@ class TestAPI(unittest.TestCase):
 
         self.client = TestClient(app)
 
+        #create and return a UserInDB object
+        def override_user():
+            return UserInDB(username="tester", hashed_password="x",
+                            access=["parameters_admin", "stations_admin", "readings_admin"])
+
+        app.dependency_overrides[get_current_active_user] = override_user #use override_user instead of get_current_active_user
+
     def tearDown(self):
         #remove the override
         app.dependency_overrides.clear()
@@ -71,21 +79,6 @@ class TestAPI(unittest.TestCase):
         self.engine.dispose()
 
         self.patched_env.stop()
-
-
-    # dummy_stations = [
-    #     {"stationId": "01230", "longitude": 12.655, "latitude": 55.610, "name":"Silstrup"},
-    #     {"stationId": "01234", "longitude": 9.888, "latitude": 57.000, "name":"Silstrup"},
-    #     {"stationId": "00001", "longitude": 10.133, "latitude": 56.930, "name":"Silstrup"}
-    # ]
-    # dummy_parameters = [
-    #     {"name": "temp", "unit": "Celsius", "frequency": "1h"},
-    #     {"name": "humidity", "unit": "percent", "frequency": "1h"},
-    # ]
-    # dummy_readings = [
-    #     {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-    #     "observedTime": "12:00:00", "observedDate": "2026-10-01"},
-    # ]
 
 
     def test_create_read_parameter(self):
