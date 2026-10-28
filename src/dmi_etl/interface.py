@@ -154,8 +154,13 @@ class UserInterface(ErrorLogger):
         exit_button.grid(row=8, column=3, columnspan=1, pady=10, padx=10, ipadx = 30, ipady=8)
         
         #return 0
+        self.optional_widgets = []
 
     def create_optional_DMI_widgets(self):
+        # Do not create new widgets atop of existing ones: Destroy prior first
+        self.remove_optional_DMI_widgets()
+
+        widgets = []
         # Create labels for the input fields
         self.label_param = tk.Label(self.root, text="Choose parameter")
         self.label_param.grid(row=1, column=0, padx=10, pady=10)
@@ -207,10 +212,8 @@ class UserInterface(ErrorLogger):
 
         self.limit_entry = tk.Entry(self.root, textvariable= default_limit)
         self.limit_entry.grid(row=7, column=1, padx=10, pady=(10,10))
-    
-    def remove_optional_DMI_widgets(self):
-        if hasattr(self, "start_date"):
-            option_widgets = [  self.label_param,
+
+        self.optional_widgets = [self.label_param,
                                 self.label_start_date,
                                 self.label_start_time,
                                 self.label_end_date,
@@ -224,8 +227,23 @@ class UserInterface(ErrorLogger):
                                 self.end_time,
                                 self.bbox_entry,
                                 self.limit_entry]
-            for w in option_widgets:
-                            w.destroy()
+        
+    def remove_optional_DMI_widgets(self):
+        for widget in getattr(self, "optional_widgets", []):
+            try:
+                if widget.winfo_exists(): # destroy the widget if it exists
+                    widget.destroy()
+            except tk.TclError:
+                pass
+        self.optional_widgets = []
+        # clear named refs, so it can be "reused" when create_optional...() 
+        for name in ("parameter_choice", "start_date", "start_time",
+                     "end_date", "end_time", "bbox_entry", "limit_entry",
+                     "label_param", "label_start_date", "label_start_time",
+                     "label_end_date", "label_end_time", "label_bbox",
+                     "label_limit"):
+            if hasattr(self, name):
+                delattr(self, name)
         
     ### Functions ###
     def update_options(self, event):
