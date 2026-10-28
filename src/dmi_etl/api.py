@@ -9,6 +9,7 @@ from dmi_etl.api_auth import app as auth_router
 from dmi_etl.api_auth import User, get_current_active_user, check_authorization
 
 from dmi_etl.DB_operations import *
+from dmi_etl.table_setup import create_schema_query
 
 ## define order in Swagger order based on tags, after the order in the dict
 tags_order_dict = [
@@ -26,6 +27,13 @@ Base = sqlalchemy.orm.declarative_base()
 #app.post = dmi_etl.api_auth.app.post
 app.include_router(auth_router,tags=["authentication"]) 
 
+connection = engine.raw_connection()
+cursor = connection.cursor()
+cursor.execute(create_schema_query)
+connection.commit()
+# closing the cursor
+cursor.close()
+connection.close()
 
 # CRUD, first defining format of respective database rows/entries, and then the CRUD methods themselves
 class Parameter(Base):
