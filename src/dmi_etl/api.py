@@ -39,12 +39,37 @@ class Reading(Base):
     time = Column(Time)
     date = Column(Date)
 
-class link(BaseModel):
+class Link(BaseModel):
     href : str
     rel : str
     type : str
     title : str
 
+class Geometry(BaseModel):
+    type : str
+    coordinates : list[float, float]
+
+class PropertiesStation(BaseModel):
+    station_id : str
+    location_name : str
+
+class StationFeature(BaseModel):
+    type : str
+    geometry : Geometry
+    properties : PropertiesStation
+
+class PropertiesReading(BaseModel):
+    parameter_name: str
+    value: float
+    station_id: str
+    time: datetime.time
+    date: datetime.date
+
+class ReadingFeature(BaseModel):
+    type : str
+    geometry : Geometry
+    properties : PropertiesReading
+    
 #Pydantic models - describes what the client is allowed to send
 class ParameterCreate(BaseModel):
     name: str
@@ -79,12 +104,12 @@ class StationResponse(BaseModel):
     latitude : float
     location_name : str
 
-class StationResponesInfo(BaseModel):
+class StationResponsesInfo(BaseModel):
     type : str
-    features : list[StationResponse]
+    features : list[StationFeature]
     timestamp : datetime.datetime
     numberReturned : int
-    links : list[link]
+    links : list[Link]
 
 
 class ReadingCreate(BaseModel):
@@ -102,12 +127,12 @@ class ReadingResponse(BaseModel):
     time: datetime.time
     date: datetime.date
 
-class ReadingResponesInfo(BaseModel):
+class ReadingResponsesInfo(BaseModel):
     type : str
-    features : list[StationResponse]
+    features : list[ReadingFeature]
     timestamp : datetime.datetime
     numberReturned : int
-    links : list[link]
+    links : list[Link]
 
 
 # GET options for readings
@@ -195,7 +220,7 @@ async def create_station(station: StationCreate, db: Session = Depends(get_db)):
     db.refresh(db_station)
     return db_station
 
-@app.get("/stations/", response_model=list[StationResponse])
+@app.get("/stations/", response_model=StationResponsesInfo)
 async def read_station(
     station_id: Annotated[str | None, Query] = None, 
     location_name: Annotated[str | None, Query] = None,
@@ -207,7 +232,6 @@ async def read_station(
     db_station = db.query(Station)
     if db_station.first() is None:
         raise HTTPException(status_code=404, detail="No stations found in database.")
-    
 
     if station_id != None:
         db_station = db_station.filter(Station.station_id == station_id)
@@ -246,8 +270,36 @@ async def read_station(
         db_station = db_station.offset(offset)
         if db_station.first() == None:
             raise HTTPException(status_code=404, detail=f"No stations over offset {offset}.")
-    
-    return db_station.all()
+
+    features_list =[]
+    for stat in db_station.all():
+        geom = {"type": "point", "coordinates" : [stat.latitude,stat.longitude]}
+
+        prop = {}
+        prop["station_id"] = stat.station_id
+        prop["location_name"] = stat.location_name
+        features_list.append({"type": "feature", "geometry": geom, "properties": prop})
+
+    response = {}
+    response["type"] = ("FeatureCollection")
+    response["features"] = features_list
+    response["timestamp"] = datetime.datetime.now()
+    response["numberReturned"] = db_station.count()
+
+    self_link = {}
+    self_link["href"] = "some link"
+    self_link["rel"] = "self"
+    self_link["type"] = "some type"
+    self_link["title"] = "This document"
+
+    next_link = {}
+    next_link["href"] = "some link"
+    next_link["rel"] = "next"
+    next_link["type"] = "some type"
+    next_link["title"] = "Next set of results"
+
+    response["links"] = [self_link, next_link]
+    return response
 
 
 @app.put("/stations/{station_id}", response_model=StationResponse)
@@ -292,11 +344,9 @@ async def create_reading(readings: list[ReadingCreate], db: Session = Depends(ge
             station_id=reading.station_id,
             date=reading.date,
             time=reading.time).first()
-
         
         if search_identical != None:
             raise HTTPException(status_code=422, detail="Unique entry already exists. Consider using update instead.")
-
         
         db_reading = Reading(**reading.model_dump())
         db.add(db_reading)
@@ -306,7 +356,7 @@ async def create_reading(readings: list[ReadingCreate], db: Session = Depends(ge
     return db_list
 
 
-@app.get("/readings/", response_model=list[ReadingResponse])
+@app.get("/readings/", response_model=ReadingResponsesInfo)
 async def read_reading(
     parameter_name: Annotated[str | None, Query] = None,
     reading_id: Annotated[int | None, Query] = None,
@@ -316,8 +366,8 @@ async def read_reading(
     limit: Annotated[int | None, Query] = None, 
     offset: Annotated[int | None, Query] = None,  
     db: Session = Depends(get_db)):
-
     db_reading = db.query(Reading)
+
     if db_reading.first() is None:
         raise HTTPException(status_code=404, detail="No readings found in database.")
 
@@ -356,10 +406,43 @@ async def read_reading(
         if db_reading.first() == None:
             raise HTTPException(status_code=404, detail=f"No readings over offset {offset}.")
         
-    
     if db_reading.first() is None:
         raise HTTPException(status_code=404, detail="Reading not found.")
-    return db_reading.all()
+
+    features_list =[]
+    for read in db_reading.all():
+        associated_station = db.query(Station).filter(Station.station_id == read.station_id).first()
+
+        geom = {"type": "point", "coordinates" : [associated_station.latitude,associated_station.longitude]}
+
+        prop = {}
+        prop["parameter_name"] = read.parameter_name
+        prop["value"] = read.value
+        prop["station_id"] = read.station_id
+        prop["date"] = read.date
+        prop["time"] = read.time
+        features_list.append({"type": "feature", "geometry": geom, "properties": prop})
+
+    response = {}
+    response["type"] = ("FeatureCollection")
+    response["features"] = features_list
+    response["timestamp"] = datetime.datetime.now()
+    response["numberReturned"] = db_reading.count()
+
+    self_link = {}
+    self_link["href"] = "some link"
+    self_link["rel"] = "self"
+    self_link["type"] = "some type"
+    self_link["title"] = "This document"
+
+    next_link = {}
+    next_link["href"] = "some link"
+    next_link["rel"] = "next"
+    next_link["type"] = "some type"
+    next_link["title"] = "Next set of results"
+
+    response["links"] = [self_link, next_link]
+    return response
 
 
 @app.put("/readings/", response_model=ReadingResponse)
@@ -371,7 +454,6 @@ async def update_reading(
     date_start: Annotated[datetime.date | None, Query] = None,
     date_end: Annotated[datetime.date | None, Query] = None,
     db: Session = Depends(get_db)):
-
     db_reading = db.query(Reading)
     if db_reading.first() is None:
         raise HTTPException(status_code=404, detail="No readings found in database.")
