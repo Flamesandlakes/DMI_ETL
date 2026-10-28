@@ -343,8 +343,8 @@ class TestUpdateParameters(WidgetsTestCase):
             "label_limit", "parameter_choice", "start_date", "start_time",
             "end_date", "end_time", "bbox_entry", "limit_entry",
         ]
-        #for attr in optional_attrs:
-        assert getattr(self.app, optional_attrs[0]).destroy.call_count == 7
+        for attr in optional_attrs:
+            assert getattr(self.app, attr,None) == None
 
 ### Partially generated tests for widget methods 
 # @unittest.skipUnless(hasattr(tkinter, "Tk"), "Tk available")
