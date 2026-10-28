@@ -2,23 +2,12 @@ from dmi_etl.DB_operations import *
 from dmi_etl.api import *
 from dmi_etl.api import app
 from dmi_etl.api_auth import UserInDB
-from dmi_etl.table_setup import create_parameter_table_query, create_readings_table_query, create_station_table_query
-from unittest.mock import Mock
 from unittest.mock import patch
-from decimal import Decimal
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 import datetime
 import os
 import unittest
-import psycopg
-import pytest
-
-
-# @app.get("/")
-# async def read_main():
-#     return {"msg": "Welcome to Geeks For Geeks"}
 
 
 
@@ -40,12 +29,11 @@ class TestAPI(unittest.TestCase):
         cursor.close()
         connection.close()
 
-        # instantiate new session to the test db 
         TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 
 
         def override_get_db():
-            db = TestSessionLocal() #make new session instance
+            db = TestSessionLocal()
             try:
                 yield db
             finally:
