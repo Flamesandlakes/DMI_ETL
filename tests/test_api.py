@@ -72,21 +72,21 @@ class TestAPI(unittest.TestCase):
     def test_create_read_parameter(self):
         test_param = {
             "name": "tests_1",
-            "unit":"test unit",
-            "frequency":"test frequency"
+            "unit": "test unit",
+            "frequency": "test frequency"
             }
-        # send request as a client by giving it URL and body
         self.client.post("/parameters/", json=test_param)
-        # Send a GET request to the root path "/"
-        response = self.client.get("/parameters/tests_1")
-        # Assert that the HTTP status code is 200 (OK)
+        response = self.client.get("/parameters/", params={"name": "tests_1"})
+
         assert response.status_code == 200
-        assert response.json() == test_param        
+        # GET /parameters/ returns a list
+        assert response.json() == [test_param]
+    
 
 
     def test_read_parameter_not_exist(self):
         # Send a GET request to the root path "/"
-        response = self.client.get("/parameters/parameter_not_exist")
+        response = self.client.get("/parameters/", params={"name":"parameter_not_exist"})
         # Assert that the HTTP status code is 404
         assert response.status_code == 404
 
@@ -129,12 +129,6 @@ class TestAPI(unittest.TestCase):
             }
 
     def test_update_parameter_not_exist(self):
-        # test_param = {
-        #     "name": "tests_1",
-        #     "unit":"test unit",
-        #     "frequency":"test frequency"
-        #     }
-        # self.client.post("/parameters/", json=test_param)
         updated_param={
             #"name": "string",
             "unit": "updated unit",
@@ -144,24 +138,41 @@ class TestAPI(unittest.TestCase):
         assert response.status_code == 404
 
 
-        
+    # def test_create_read_station(self):
+    #     # test_station=
+    #     # {
+    #     #     "station_id": "1234", 
+    #     #     "longitude":11.112, 
+    #     #     "latitude":11.123, 
+    #     #     "location_name": "test1234"
+    #     #     }
+    #     self.client.post("/stations/", json=test_station)
+    #     response = self.client.get("/stations/1234", params={"location_name": "test1234"})
+
+    #     assert response.status_code == 200
+    #     assert response.json() == test_station
+
 
     def test_create_read_station(self):
         test_station = {
-            "station_id": "1234", 
-            "longitude":11.112, 
-            "latitude":11.123, 
+            "station_id": "1234",
+            "longitude": 11.112,
+            "latitude": 11.123,
             "location_name": "test1234"
             }
         self.client.post("/stations/", json=test_station)
-        response = self.client.get("/stations/1234")
+        response = self.client.get("/stations/", params={"station_id": "1234"})
 
         assert response.status_code == 200
-        assert response.json() == test_station
+        data = response.json()
+        assert data["numberReturned"] == 1
+        assert data["features"][0]["properties"] == {"stationId": "1234", "name": "test1234"}
+        assert data["features"][0]["geometry"]["coordinates"] == [11.123, 11.112]
+
 
 
     def test_read_station_not_exist(self):
-        response = self.client.get("/stations/9999")
+        response = self.client.get("/stations/", params={"name":"station_not_exist"})
         assert response.status_code == 404
 
 
