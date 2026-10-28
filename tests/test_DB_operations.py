@@ -29,9 +29,9 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         connection = engine.raw_connection()
         cursor = connection.cursor()
         #delete tables
-        cursor.execute("DROP TABLE IF EXISTS readings_data")
-        cursor.execute("DROP TABLE IF EXISTS parameter_data")
-        cursor.execute("DROP TABLE IF EXISTS stations_data")
+        cursor.execute("DROP TABLE IF EXISTS climate.readings_data")
+        cursor.execute("DROP TABLE IF EXISTS climate.parameter_data")
+        cursor.execute("DROP TABLE IF EXISTS climate.stations_data")
         
         #commit changes
         connection.commit()
@@ -56,7 +56,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         ]
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
         ]
         commit_to_postgres(dummy_stations, dummy_parameters, dummy_readings)
 
@@ -87,7 +87,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         try:
             create_tables(cursor) #make tables
             load_stations(dummy_stations, cursor)
-            cursor.execute("SELECT * FROM stations_data") #read tables
+            cursor.execute("SELECT * FROM climate.stations_data") #read tables
             result = cursor.fetchall()
             assert len(result) == 3
             expected = [('01230', Decimal('12.655'), Decimal('55.610'), "Silstrup"), 
@@ -113,7 +113,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         try:
             create_tables(cursor) #make tables
             load_parameter(dummy_parameters, cursor)
-            cursor.execute("SELECT * FROM parameter_data") #read tables
+            cursor.execute("SELECT * FROM climate.parameter_data") #read tables
             result = cursor.fetchall()
             assert len(result) == 2
 
@@ -143,7 +143,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         ]
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
         ]
 
         try:
@@ -152,7 +152,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
             load_stations(dummy_stations, cursor)
 
             load_readings(dummy_readings, cursor)
-            cursor.execute("SELECT * FROM readings_data") #read tables
+            cursor.execute("SELECT * FROM climate.readings_data") #read tables
             result = cursor.fetchall()
             assert len(result) == 1
             expected = [('temp', Decimal('12.30'), 1, '01230', datetime.time(12, 0), datetime.date(2026, 10, 1))]
@@ -175,7 +175,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         try:
             create_tables(cursor) #make tables
             load_stations(dummy_stations, cursor)
-            cursor.execute("SELECT * FROM stations_data") #read tables
+            cursor.execute("SELECT * FROM climate.stations_data") #read tables
             result = cursor.fetchall()
             assert len(result) == 2
             expected = [('01230', Decimal('12.655'), Decimal('55.610'), "Silstrup"),
@@ -200,7 +200,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         try:
             create_tables(cursor) #make tables
             load_parameter(dummy_parameters, cursor)
-            cursor.execute("SELECT * FROM parameter_data") #read tables
+            cursor.execute("SELECT * FROM climate.parameter_data") #read tables
             result = cursor.fetchall()
             assert len(result) == 2
 
@@ -225,9 +225,9 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         ]
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
         ]
 
         try:
@@ -236,7 +236,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
             load_stations(dummy_stations, cursor)
 
             load_readings(dummy_readings, cursor)
-            cursor.execute("SELECT parameter_name, value, station_id, time, date FROM readings_data")
+            cursor.execute("SELECT parameter_name, value, station_id, time, date FROM climate.readings_data")
             result = cursor.fetchall()
             assert len(result) == 1
 
@@ -277,7 +277,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         try:
             create_tables(cursor) #make tables
             load_stations(dummy_stations, cursor)
-            cursor.execute("SELECT * FROM stations_data") #read tables
+            cursor.execute("SELECT * FROM climate.stations_data") #read tables
             result = cursor.fetchall()
             assert len(result) == 0
             expected = []
@@ -299,7 +299,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
         try:
             create_tables(cursor) #make tables
             load_parameter(dummy_parameters, cursor)
-            cursor.execute("SELECT * FROM parameter_data") #read tables
+            cursor.execute("SELECT * FROM climate.parameter_data") #read tables
             result = cursor.fetchall()
             assert len(result) == 0
 
@@ -330,7 +330,7 @@ class TestDBOperationsIntegrated(unittest.TestCase):
             load_stations(dummy_stations, cursor)
             load_readings(dummy_readings,cursor)
             
-            cursor.execute("SELECT * FROM readings_data") #read tables
+            cursor.execute("SELECT * FROM climate.readings_data") #read tables
             result = cursor.fetchall()
             assert len(result) == 0
 
@@ -376,7 +376,7 @@ class TestDBOperations(unittest.TestCase):
         ]
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"},
+            "Time": "12:00:00", "Date": "2026-10-01"},
         ]
     
         #make fake objects
@@ -387,7 +387,7 @@ class TestDBOperations(unittest.TestCase):
         commit_to_postgres(dummy_stations, dummy_parameters, dummy_readings)
 
         #assert that the correct calls were made inside of commit_to_postgres()
-        assert cursor.execute.call_count==6 #assert cursor.execute is called once for each of the tables made via SQL queries. one INSERT is made into each of the tables
+        assert cursor.execute.call_count==7 #assert cursor.execute is called once for each of the tables made via SQL queries (and once for the schema?). one INSERT is made into each of the tables
         connection.commit.assert_called_once()
         cursor.close.assert_called_once()
         connection.close.assert_called_once()
@@ -400,7 +400,7 @@ class TestDBOperations(unittest.TestCase):
         # cursor = connection.cursor()
         create_tables(cursor)
 
-        assert cursor.execute.call_count ==3 #assert .execute() method was called 3 times - one for each table created
+        assert cursor.execute.call_count ==4 #assert .execute() method was called 3 times - one for each table created
 
 
     def test_create_tables_twice(self): #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -429,7 +429,7 @@ class TestDBOperations(unittest.TestCase):
         cursor = Mock()
         dummy_readings = [
             {"parameterId": "temp", "value": 12.3, "stationId": "01230",
-            "observedTime": "12:00:00", "observedDate": "2026-10-01"}]
+            "Time": "12:00:00", "Date": "2026-10-01"}]
         load_readings(dummy_readings, cursor)
         assert cursor.execute.call_count ==1
 
