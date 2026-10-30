@@ -28,10 +28,11 @@ if __name__ == "__main__":
             
             all_listOfDicts.extend(listOfDicts)
             
-            all_weather_stations = [{"stationId": "ae6901bb-6703-4955-9d59-179c1ee5dae8", "name": "Ballerup Akademi", "longitude": 12.3876, "latitude": 55.7357},
-                                    {"stationId": "2c47284d-777b-44f0-bdeb-3d442f6a31b1", "name": "Odense Akademi", "longitude": 10.2112 , "latitude": 56.1554},
-                                    {"stationId": "6d437168-7432-470b-9cf4-08439d0127ad", "name": "Aarhus Akademi", "longitude": 10.3880 , "latitude": 55.4025}
-                                    ]
+            unique_weather_stations = set([Dict["stationId"] for Dict in listOfDicts])
+            unique_weather_stations_metadata = [Map_NodeId_to_Location_as_station(nodeId) for nodeId in list(unique_weather_stations)]
+            all_weather_stations.extend(unique_weather_stations_metadata) 
+            
+            
         elif package["api"] == "Our api":
             identification = ui.get_identification(package)
             token = requests.post(url = url+"/token", data={"username":identification["username"],"password":identification["password"]})

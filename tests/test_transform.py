@@ -247,3 +247,65 @@ class test_checks(unittest.TestCase):
 
     def test_parameter_check_fail2(self):
         self.assertFalse(Transform.ParameterCheck(testdata["features"][0],self.parameterListBad))
+
+class test_normalize_datetime(unittest.TestCase):
+    def test_normalize_datetime_on_milliseconds(self):
+      string =  '2029-10-28T07:57:50.172701Z'
+      result = Transform.Normalize_Datetime(string)
+      self.assertEqual(result, '2029-10-28T07:57:50Z')
+
+    def test_normalize_datetime_on_seconds(self):
+      string =  '2029-10-28T07:59:50Z'
+      result = Transform.Normalize_Datetime(string)
+      self.assertEqual(result,'2029-10-28T07:59:50Z')
+
+class test_format_value(unittest.TestCase):
+    def test_format_value_on_many_decimals(self):
+      number = 18.1233333333
+      result = Transform.Format_Value(number)
+      self.assertEqual(result, 18.12)
+
+class test_spac_observation_transform(unittest.TestCase):
+    def test_reformat(self):
+      test_data = {"observations":[{'observationId':1, 'nodeId':'TEST0A', 
+                                    'instrumentId':'111-111', 'instrumentModel':'AIRPLUS', 
+                                           'sensor':'air quality', 'readingId':1, 'value':15, 
+                                           'timestamp':'2046-10-27T13:56:07.084659Z'},
+                                    {'observationId':2, 'nodeId':'TEST0B', 
+                                    'instrumentId':'111-112', 'instrumentModel':'AIRMINUS', 
+                                           'sensor':'co2 concentration', 'readingId':2, 'value':5, 
+                                           'timestamp':'2046-10-27T13:56:07.384689Z'}]}
+      result_obs = Transform.Reformat_SPAC_Observation(test_data['observations'][0])
+
+      expected_obs = {"stationId": "TEST0A", "parameterId": "air quality", "value": 15,
+                  "observedDate":"2046-10-27",
+                  "observedTime":"13:56:07", 
+                  "longitude": None,
+                  "latitude": None}
+      self.assertEqual(result_obs, expected_obs)
+
+      result_list = Transform.Make_Dicts_From_Observations(test_data)
+      expected_list = [{"stationId": "TEST0A", "parameterId": "air quality", "value": 15,
+                        "observedDate":"2046-10-27",
+                        "observedTime":"13:56:07", 
+                        "longitude": None,
+                        "latitude": None},
+                        {"stationId": "TEST0B", "parameterId": "co2 concentration", "value": 5,
+                        "observedDate":"2046-10-27",
+                        "observedTime":"13:56:07", 
+                        "longitude": None,
+                        "latitude": None}]
+      self.assertEqual(result_list, expected_list)
+#"""Take a SPAC obervation and make its naming scheme compatible with the existing pipeline"""
+# def Reformat_SPAC_Observation(observation: dict):
+#     Date, Time = Convert_To_Date_And_Time(observation["timestamp"])
+#     reformated_dict = {"stationId": observation["nodeId"],
+#                        "parameterId": observation["sensor"] if observation["instrumentModel"] != "DS18B20" else "temperature",
+#                        "value": Format_Value(observation["value"]),
+#                        "observedDate": Date,
+#                        "observedTime": Time,
+#                        "longitude": None,
+#                        "latitude": None}
+
+
+#def Make_Dicts_From_Observations(observations_dict: dict):

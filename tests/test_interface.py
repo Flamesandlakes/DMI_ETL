@@ -188,6 +188,16 @@ class TestUserInterface(unittest.TestCase):
             self.ui.get_user_input()
             self.assertEqual(self.ui.request_packages, [])
 
+    def test_get_user_input_when_spac(self):
+            self.ui.api_source_choice.get.return_value = "SPAC readings"
+    
+            self.ui.get_user_input()
+    
+            self.assertEqual(len(self.ui.request_packages), 1)
+            pkg = self.ui.request_packages[0]
+            self.assertEqual(pkg["api"], "SPAC readings")
+
+
     def test_mock_run(self):
         ui = UserInterface()
         ui.has_root = MagicMock()
@@ -343,8 +353,8 @@ class TestUpdateParameters(WidgetsTestCase):
             "label_limit", "parameter_choice", "start_date", "start_time",
             "end_date", "end_time", "bbox_entry", "limit_entry",
         ]
-        #for attr in optional_attrs:
-        assert getattr(self.app, optional_attrs[0]).destroy.call_count == 7
+        for attr in optional_attrs:
+            assert getattr(self.app, attr,None) == None
 
 ### Partially generated tests for widget methods 
 # @unittest.skipUnless(hasattr(tkinter, "Tk"), "Tk available")

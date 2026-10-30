@@ -12,6 +12,12 @@ datetimeFormat = re.compile('.*-.*-.*:.*:.*')
 timeFormat = re.compile('.*:.*:.*')
 dateFormat = re.compile('.*-.*-.*')
 
+nodeId_to_location = {"ae6901bb-6703-4955-9d59-179c1ee5dae8":{"stationId": "ae6901bb-6703-4955-9d59-179c1ee5dae8", "name": "Ballerup Akademi", "longitude": 12.3876, "latitude": 55.7357},
+        "2c47284d-777b-44f0-bdeb-3d442f6a31b1":{"stationId": "2c47284d-777b-44f0-bdeb-3d442f6a31b1", "name": "Odense Akademi", "longitude": 10.2112 , "latitude": 56.1554},
+        "6d437168-7432-470b-9cf4-08439d0127ad":{"stationId": "6d437168-7432-470b-9cf4-08439d0127ad", "name": "Aarhus Akademi", "longitude": 10.3880 , "latitude": 55.4025},
+        "NOT_RECOGNIZED":{"stationId": "NOT_RECOGNIZED", "name": "TBD", "longitude": None , "latitude": None}
+    }
+
 """Gets the geolocation of station as longitude, latitude"""
 def Get_Location(data):
     geo = data["geometry"]["coordinates"]
@@ -136,7 +142,7 @@ def Format_Value(value):
 """Take a SPAC obervation and make its naming scheme compatible with the existing pipeline"""
 def Reformat_SPAC_Observation(observation: dict):
     Date, Time = Convert_To_Date_And_Time(observation["timestamp"])
-    reformated_dict = {"stationId": observation["nodeId"],
+    reformated_dict = {"stationId": Map_NodeId_to_Location_as_entry(observation["nodeId"]),
                        "parameterId": observation["sensor"] if observation["instrumentModel"] != "DS18B20" else "temperature",
                        "value": Format_Value(observation["value"]),
                        "observedDate": Date,
@@ -149,3 +155,14 @@ def Make_Dicts_From_Observations(observations_dict: dict):
     listOfObs = [Reformat_SPAC_Observation(obs) for obs in observations_dict["observations"]]
     return listOfObs
 
+def Map_NodeId_to_Location_as_station(nodeId):
+    if nodeId in nodeId_to_location:
+        return nodeId_to_location[nodeId]
+    else:
+        return nodeId_to_location["NOT_RECOGNIZED"]
+
+def Map_NodeId_to_Location_as_entry(nodeId):
+    if nodeId in nodeId_to_location:
+        return nodeId
+    else:
+        return "NOT_RECOGNIZED"
