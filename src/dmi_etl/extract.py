@@ -38,7 +38,7 @@ def get_data_with_params(base_url: str, parameters: dict, token: dict = None):
     if bool(token):
         header = token["token_type"]+" "+token["access_token"]
         response = requests.get(url = base_url, params = parameters, headers={"Authorization": header})
-        print(response.headers)
+        
     else:
         response = requests.get(url = base_url, params = parameters)
     

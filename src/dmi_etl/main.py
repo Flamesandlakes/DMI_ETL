@@ -21,7 +21,8 @@ if __name__ == "__main__":
     for package in ui.request_packages:
         # Unpack the package to get the url and parameters
         url, parameters = ui.get_url_and_params(package)
-
+        print(url)
+        print(parameters)
         if package["api"] == "SPAC readings":
             extractedData = get_data_from_api_with_credentials(url, parameters, Credentials())
             listOfDicts = Make_Dicts_From_Observations(extractedData)
@@ -32,11 +33,12 @@ if __name__ == "__main__":
             unique_weather_stations_metadata = [Map_NodeId_to_Location_as_station(nodeId) for nodeId in list(unique_weather_stations)]
             all_weather_stations.extend(unique_weather_stations_metadata) 
             
-            
+
         elif package["api"] == "Our api":
             identification = ui.get_identification(package)
+            
             token = requests.post(url = url+"/token", data={"username":identification["username"],"password":identification["password"]})
-            extractedData = get_data_with_params(url+"/readings", parameters, token.json())
+            extractedData = get_data_with_params(url+"/readings/", parameters, token.json())
             if "detail" in extractedData:
                 print(extractedData)
                 break
@@ -62,7 +64,7 @@ if __name__ == "__main__":
             parameterlist_stations = ["properties.stationId",  "properties.name", "geometry"]
             weather_stations = Make_Dicts_From_List_And_Parameter_List(weather_stations,parameterlist_stations)
                         
-        
+            all_weather_stations.extend(weather_stations)
         elif package["api"] == "DMI readings":
             extractedData = get_data_with_params(url, parameters)
             
@@ -80,7 +82,7 @@ if __name__ == "__main__":
                     all_uniqueStationIds.append(id)
 
             weather_stations = get_station_data(stations_to_request)
-
+            
             parameterlist_stations = ["properties.stationId",  "properties.name", "geometry"]
             weather_stations = Make_Dicts_From_List_And_Parameter_List(weather_stations,parameterlist_stations)
             
