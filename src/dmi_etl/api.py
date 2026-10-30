@@ -312,10 +312,10 @@ async def read_station(current_user: Annotated[User, Security(get_current_active
             raise HTTPException(status_code=400, detail="The bounding box only takes 4 inputs")
 
         db_station = db_station.filter(
-            Station.latitude >= bbox_list[0]).filter(
-            Station.latitude <= bbox_list[1]).filter(
-            Station.longitude >= bbox_list[2]).filter(
-            Station.longitude <= bbox_list[3])
+            Station.longitude >= bbox_list[0]).filter(
+            Station.latitude >= bbox_list[1]).filter(
+            Station.longitude <= bbox_list[2]).filter(
+            Station.latitude <= bbox_list[3])
         
         if db_station.first() == None:
             raise HTTPException(status_code=404, detail=f"Stations in the bounding box: {bbox} not found.")
@@ -484,15 +484,17 @@ async def read_reading(
             raise HTTPException(status_code=400, detail="The bounding box only takes 4 inputs")
         db_station = db.query(Station)
         db_station = db_station.filter(
-            Station.latitude >= bbox_list[0]).filter(
-            Station.latitude <= bbox_list[1]).filter(
-            Station.longitude >= bbox_list[2]).filter(
-            Station.longitude <= bbox_list[3])
+            Station.longitude >= bbox_list[0]).filter(
+            Station.latitude >= bbox_list[1]).filter(
+            Station.longitude <= bbox_list[2]).filter(
+            Station.latitude <= bbox_list[3])
+        
         stations = db_station.all()
         stations_ids = []
         for i in stations:
             stations_ids.append(i.station_id)
-        db_reading = db_reading.filter(Reading.station_id in stations_ids)
+         
+        db_reading = db_reading.filter(Reading.station_id.in_(stations_ids))
 
         if db_reading.first() == None:
             raise HTTPException(status_code=404, detail=f"Stations in the bounding box: {bbox} not found.")

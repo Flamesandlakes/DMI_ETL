@@ -1,5 +1,4 @@
 import requests
-from requests.auth import HTTPBasicAuth
 import time
 from dmi_etl.utility import Credentials
 
@@ -25,22 +24,23 @@ class RateConstraint():
 
 
 # function to extract data from the API
-def get_data(url, Autentication: dict ):
-    if bool(Autentication):
-        response = requests.get(url)
+def get_data(url, token: dict ):
+    if bool(token):
+        header = token["token_type"]+" "+token["access_token"]
+        response = requests.get(url, headers={"Authorization": header})
     else:
-        basic = HTTPBasicAuth(Autentication["username"], Autentication["password"])
-        response = requests.get(url, auth=basic)
+        response = requests.get(url)
     data = response.json()
     
     return data
 
-def get_data_with_params(base_url: str, parameters: dict, Autentication: dict = None):
-    if bool(Autentication):
-        response = requests.get(url = base_url, params = parameters)
+def get_data_with_params(base_url: str, parameters: dict, token: dict = None):
+    if bool(token):
+        header = token["token_type"]+" "+token["access_token"]
+        response = requests.get(url = base_url, params = parameters, headers={"Authorization": header})
+        print(response.headers)
     else:
-        basic = HTTPBasicAuth(Autentication["username"], Autentication["password"])
-        response = requests.get(url = base_url, params = parameters, auth=basic)
+        response = requests.get(url = base_url, params = parameters)
     
     data = response.json()
     return data

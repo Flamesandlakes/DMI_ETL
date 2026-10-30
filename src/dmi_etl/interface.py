@@ -10,7 +10,7 @@ import datetime
 API_options = {"DMI readings": "https://opendataapi.dmi.dk/v2/metObs/collections/observation/items",
                #"DMI stations": "https://opendataapi.dmi.dk/v2/metObs/collections/station/items",
                "SPAC readings": "https://herodot.spac.dk/api/v1/observations",
-               "Our api": "http://192.168.113.9:8000/readings"
+               "Our api": "url"
                }
 
 API_parameters = {"DMI readings": ["temp_mean_past1h", "wind_speed_past1h", 
@@ -279,13 +279,13 @@ class UserInterface(ErrorLogger):
         self.url_entry.grid(row=8, column=1, padx=10, pady=(10,10))
 
         # usename
-        default_username = tk.StringVar(self.root, value= "tester")
+        default_username = tk.StringVar(self.root, value= "username")
 
         self.username_entry = tk.Entry(self.root, textvariable= default_username)
         self.username_entry.grid(row=6, column=3, padx=10, pady=(10,10))
 
         # password
-        default_password = tk.StringVar(self.root, value= "kodeord")
+        default_password = tk.StringVar(self.root, value= "password")
 
         self.password_entry = tk.Entry(self.root, textvariable= default_password)
         self.password_entry.grid(row=7, column=3, padx=10, pady=(10,10)) 
@@ -390,7 +390,7 @@ class UserInterface(ErrorLogger):
                                                     "bbox": bbox_entry_value, "limit": limit_entry_value}}
             elif selected_api == "Our api":
                 selected_parameter = self.parameter_choice.get(i)
-                request_package = {"api": selected_api, "api_url": API_options.get(selected_api), 
+                request_package = {"api": selected_api, "api_url": self.url_entry.get(), 
                                 "Identification": {"username": self.username_entry.get(),
                                                    "password": self.password_entry.get()},
                                 "api_parameters": {"parameter_name": selected_parameter, 

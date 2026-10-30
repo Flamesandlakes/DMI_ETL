@@ -4,6 +4,7 @@ from dmi_etl.DB_operations import *
 from dmi_etl.interface import UserInterface
 from dmi_etl.utility import Credentials
 import sys
+import requests
 
 if __name__ == "__main__":
     ui = UserInterface()
@@ -32,8 +33,12 @@ if __name__ == "__main__":
                                     {"stationId": "6d437168-7432-470b-9cf4-08439d0127ad", "name": "Aarhus Akademi", "longitude": 10.3880 , "latitude": 55.4025}
                                     ]
         elif package["api"] == "Our api":
-            identification = ui.get_url_and_params(package)
-            extractedData = get_data_with_params(url+"/readings", parameters, identification)
+            identification = ui.get_identification(package)
+            token = requests.post(url = url+"/token", data={"username":identification["username"],"password":identification["password"]})
+            extractedData = get_data_with_params(url+"/readings", parameters, token.json())
+            if "detail" in extractedData:
+                print(extractedData)
+                break
             
             parameterlist = ["properties.stationId", "properties.parameterId",  "properties.value", "properties.date", "properties.time", "geometry"]
             listOfDicts = Make_Dicts_From_Collection_And_Parameter_List(extractedData, parameterlist)
@@ -50,7 +55,7 @@ if __name__ == "__main__":
 
             weather_stations =[]
             for station in stations_to_request:
-                station_data = get_data(url+"/stations/?station_id"+station, identification)
+                station_data = get_data(url+"/stations/?station_id"+station, token.json())
                 weather_stations.append(station_data)
 
             parameterlist_stations = ["properties.stationId",  "properties.name", "geometry"]
