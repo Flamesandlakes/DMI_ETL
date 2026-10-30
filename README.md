@@ -2,7 +2,7 @@
 Extracting, transforming and loading data from DMI. Project at SPAC.
 
 ## Description
-This repository provides a ETL pipeline to request data from APIs (such as DMI), parsing and transforming it, and subsequently store it in a local database. <br>
+This repository provides a ETL pipeline to request data from APIs (such as DMI), parsing and transforming it, and subsequently store it in a local database.  
 Docker is used to run and containerize the PostgreSQL database server in an isolated environment, and a compose.yaml file is provided. The pipeline itself runs locally with uv.
 
 ## Setup
@@ -18,11 +18,10 @@ Download uv for windows:
 ```
     powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
-For MacOS and Linux, use: https://docs.astral.sh/uv/getting-started/installation/#installation-methods 
+For MacOS and Linux, use: https://docs.astral.sh/uv/getting-started/installation/#installation-methods   
 
-<br><br>
-Use Docker to compose your container, which will setup an environment to start the PostgreSQL server.  Use the following command to start the database and fetch the image:
-<br><br>
+Use Docker to compose your container, which will setup an environment to start the PostgreSQL server.  Use the following command to start the database and fetch the image:  
+
 ```
     docker compose up -d
 ```
@@ -31,11 +30,9 @@ To run the pipeline, use:
     uv run src/dmi_etl/main.py
 ``` 
 
-When running the pipeline, a GUI pops up where you can input select api source and a corresponding set of options to specify the data that the pipeline should extract.
-<br><br>
-Use pgAdmin4[^1], or a similar application (such as the Database tool from the PostgreSQL VSCode extension), to interface with the server.
-<br><br>
-When connecting to the server, use `host=localhost` and `port=5432`. The user and password should match the information in the compose.yaml file.
+When running the pipeline, a GUI pops up where you can input select api source and a corresponding set of options to specify the data that the pipeline should extract.  
+Use pgAdmin4[^1], or a similar application (such as the Database tool from the PostgreSQL VSCode extension), to interface with the server.  
+When connecting to the server, use `host=localhost` and `port=5432`. The user and password should match the information in the compose.yaml file.  
 
 
 To stop the database, use
@@ -43,7 +40,7 @@ To stop the database, use
     docker compose down
 ```
 
-**Locally host an API with access to your database** 
+**Locally host an API with access to your database:**\
 To enable other users on the same WiFi network to interface with your database, use
 ```
     uv run src/dmi_etl/api.py
@@ -52,7 +49,7 @@ The terminal will show the HTTP address that can be used to access the API with.
 The /docs subdomain webpage on this address provides an overview of the possible CRUD methods.
 Users must login with a valid username and password. The user_db dictionary located in api.py can be modified, both in terms of users, their login and their access. Note that the password must be hashed with the Argon2 hashing algorithm[^3]. 
 
-**Run tests and code coverage**\
+**Run tests and code coverage:**\
 When the container starts for the first time, the SQL script db_init/create_test_db.sql runs automatically. 
 It creates the test database weatherdb_test, which the tests use.
 ```
