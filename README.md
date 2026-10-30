@@ -43,7 +43,7 @@ To stop the database, use
     docker compose down
 ```
 
-**Locally host an API with access to your database**\ 
+**Locally host an API with access to your database** 
 To enable other users on the same WiFi network to interface with your database, use
 ```
     uv run src/dmi_etl/api.py
@@ -86,6 +86,10 @@ The three steps of ETL, i.e. extraction, transformation and loading, are represe
     - Functions pertaining to authentication and authorization for usage of the API run from api.py.  
 
 
+## Use Cases
+There are overall three high-level use cases: 1. Getting data through the ETL pipeline, 2. hosting access to the database through an API, and 3. interacting with said API.
+![Use Case UML for the DMI ETL Project](https://github.com/Flamesandlakes/parser/blob/main/images/UML for DMI ETL project_Use Case diagram v2.usecase.png)
+
 ### Dependencies
 
 * Python >= 3.13
@@ -99,6 +103,7 @@ The three steps of ETL, i.e. extraction, transformation and loading, are represe
     - coverage>=7.16.2
     - customtkinter>=6.0.0
     - tkcalendar>=1.6.1
+    - dotenv>=0.9.9
 
 
 [^1]: pgAdmin4 version 9.17 is recommended. Version 9.18 requires a workaround (see: https://github.com/pgadmin-org/pgadmin4/issues/10437)
